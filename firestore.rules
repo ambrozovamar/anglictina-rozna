@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Pravidla Firestore pro aplikaci Angličtina Rožná.
+// Vložte je ve Firebase konzoli: Firestore Database → Rules → Publish.
+//
+// Učitelka = uživatel, pro kterého v kolekci `teachers` existuje dokument s ID = jeho UID
+//   (založí se ručně v konzoli; z aplikace ho nikdo vytvořit nemůže).
+// Děti (další krok) = dokument `students/{uid}` s polem `grade` (2, 3 nebo 4);
+//   uvidí jen záznamy svého ročníku označené `visible: true`, nic nemohou měnit.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isTeacher() {
+      return signedIn() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+    }
+    function studentGrade() {
+      return get(/databases/$(database)/documents/students/$(request.auth.uid)).data.grade;
+    }
+    function isStudent() {
+      return signedIn() && exists(/databases/$(database)/documents/students/$(request.auth.uid));
+    }
+
+    // Role spravuje jen správce v konzoli.
+    match /teachers/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+    match /students/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isTeacher());
+      allow write: if false;
+    }
+
+    // Profil (klíč k připraveným hodinám, seznam importovaných hodin) – jen vlastník.
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Data aplikace.
+    match /{col}/{id} {
+      function isDataCol() { return col in ['lessons', 'vocab', 'resources', 'topics']; }
+      function validNew() {
+        return request.resource.data.owner == request.auth.uid
+          && request.resource.data.keys().hasOnly(['owner', 'grade', 'visible', 'data', 'updated_at']);
+      }
+
+      allow read: if isDataCol() && signedIn() && (
+        resource.data.owner == request.auth.uid
+        || (isStudent() && resource.data.visible == true
+            && (resource.data.grade == studentGrade() || resource.data.grade == null))
+      );
+      allow create: if isDataCol() && isTeacher() && validNew();
+      allow update: if isDataCol() && isTeacher() && resource.data.owner == request.auth.uid && validNew();
+      allow delete: if isDataCol() && isTeacher() && resource.data.owner == request.auth.uid;
+    }
+  }
+}

@@ -77,7 +77,7 @@ function shell(active) {
           ${MY_TOOLS.map((t) => `<a href="${esc(t.url)}" target="_blank" rel="noopener" class="ext">${t.icon} ${esc(t.name)} <span class="muted">↗</span></a>`).join('')}
         </nav>
         <div class="side-foot">
-          ${store.online ? '☁️ Připojeno k databázi' : '💾 Offline režim'}<br>
+          ${store.online ? '☁️ Firebase' : '💾 Offline režim'}<br>
           <a href="#" id="logout">Odhlásit se</a>
         </div>
       </aside>
@@ -201,12 +201,15 @@ async function start() {
   try {
     await store.loadAll();
   } catch (err) {
-    app.innerHTML = `<div class="boot error">${esc(err.message)}</div>`;
+    app.innerHTML = `<div class="boot error">${esc(err.message)}<br><a href="#" id="out">Odhlásit se</a></div>`;
+    $('#out').addEventListener('click', async (e) => { e.preventDefault(); await store.signOut(); renderLogin(); });
     return;
   }
   if (!routing) window.addEventListener('hashchange', route);
   routing = true;
   route();
+  if (store.migrated) toast(`Data z tohoto prohlížeče (${store.migrated} záznamů) jsou přenesená do databáze.`);
+  if (store.online && (await store.preparedLocked())) toast('Připravené hodiny jsou zamčené – odemkněte je v Nastavení.');
 }
 let routing = false;
 

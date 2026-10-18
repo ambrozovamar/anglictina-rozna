@@ -25,7 +25,7 @@ Aplikace je čisté HTML/CSS/JavaScript, nic se neinstaluje ani nesestavuje.
   - aktivitu „Opakování z minula“
   - slovíčka, která děti ještě neumí
 - **Zdroje a nástroje**: knihovna odkazů (Wordwall, Kahoot, Blooket, YouTube, Canva…), připojitelných k aktivitám.
-- **Příprava na přístup dětí**: lekce i zdroje mají přepínač „Vidí děti“ a databáze už má role *teacher / student* (viz `supabase/schema.sql`).
+- **Příprava na přístup dětí**: lekce i zdroje mají přepínač „Vidí děti“ a pravidla databáze už počítají s rolemi *teacher / student* (viz `firestore.rules`).
 
 ## Vyzkoušení na počítači
 
@@ -35,16 +35,22 @@ powershell -ExecutionPolicy Bypass -File serve.ps1
 
 a otevřít http://localhost:8080. Bez připojené databáze běží aplikace v **offline režimu** (data jen v prohlížeči, záloha v Nastavení).
 
-## Připojení databáze a přihlášení (Supabase, zdarma)
+## Připojení databáze a přihlášení (Firebase, zdarma – tarif Spark)
 
-1. Na https://supabase.com si založte účet a nový projekt (region EU, např. Frankfurt).
-2. V projektu otevřete **SQL Editor → New query**, vložte celý obsah `supabase/schema.sql` a klikněte na **Run**.
-3. **Authentication → Users → Add user → Create new user**: zadejte svůj e-mail a heslo (zaškrtněte *Auto Confirm User*).
-4. **Authentication → Sign In / Providers**: vypněte *Allow new users to sign up*, aby si účet nemohl založit nikdo cizí.
-5. **Project Settings → API**: zkopírujte *Project URL* a *anon public* klíč do `js/config.js`.
-6. Pokud jste už pracovala v offline režimu: v Nastavení stáhněte zálohu, po připojení se přihlaste a zálohu nahrajte.
+1. Na https://console.firebase.google.com založte projekt (Google Analytics není potřeba).
+2. **Build → Authentication → Get started → Sign-in method → Email/Password → Enable.**
+   V **Settings → User actions** vypněte *Enable create (sign-up)*, aby si účet nemohl založit nikdo cizí.
+   V **Settings → Authorized domains** přidejte `ambrozovamar.github.io`.
+3. **Authentication → Users → Add user**: zadejte svůj e-mail a heslo. Zkopírujte si *User UID*.
+4. **Build → Firestore Database → Create database** (region `eur3` nebo `europe-west3`, režim *production*).
+   V záložce **Rules** vložte obsah `firestore.rules` a **Publish**.
+   V záložce **Data** založte kolekci `teachers` a v ní dokument s ID = vaše *User UID* (stačí pole `name`).
+5. **Project settings → General → Your apps → Web (</>)**: zaregistrujte aplikaci a objekt `firebaseConfig` zkopírujte do `js/config.js` jako `FIREBASE_CONFIG`.
+6. Přihlaste se e-mailem a heslem. Data z offline režimu v daném prohlížeči se při prvním přihlášení přenesou do databáze sama.
+   V **Nastavení** jednou zadejte heslo webu – připravené hodiny se pak načítají na každém zařízení.
 
-Anon klíč je veřejný; data chrání pravidla Row Level Security. Každý učitel vidí jen svá data, žák v budoucnu jen to, co je označené „Vidí děti“ pro jeho ročník.
+Konfigurace Firebase je veřejná; data chrání přihlášení a pravidla Firestore. Zapisovat smí jen účet z kolekce `teachers`,
+každý vidí jen svá data a žák (kolekce `students` s polem `grade`) v budoucnu jen záznamy svého ročníku označené „Vidí děti“.
 
 ## Zveřejnění webu
 
@@ -72,10 +78,10 @@ Bez hesla je nikdo nepřečte, a to ani na webu, ani na GitHubu. Kód aplikace a
 |---|---|
 | `index.html` | vstupní stránka |
 | `css/style.css` | vzhled (světlý i tmavý režim, tisk, mobil) |
-| `js/config.js` | připojení k Supabase |
+| `js/config.js` | připojení k Firebase |
 | `js/curriculum.js` | ročníky, rozvrh, témata z tematických plánů, šablony aktivit, výchozí nástroje |
-| `js/store.js` | ukládání dat (Supabase nebo localStorage) |
+| `js/store.js` | ukládání dat (Firebase nebo localStorage) |
 | `js/lessons.js` | logika hodin a navazování |
 | `js/schedule.js` | výpočet termínů podle rozvrhu |
 | `js/views/*.js` | jednotlivé obrazovky |
-| `supabase/schema.sql` | databáze a přístupová práva |
+| `firestore.rules` | přístupová práva k databázi |

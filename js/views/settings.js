@@ -11,11 +11,16 @@ export function renderSettings(view) {
       <section class="card stack">
         <h2>Ukládání dat</h2>
         ${store.online
-          ? '<p>☁️ Aplikace je připojená k databázi Supabase. Data jsou dostupná z každého počítače po přihlášení.</p>'
+          ? '<p>☁️ Aplikace je připojená k databázi <b>Firebase</b>. Data jsou dostupná z každého zařízení po přihlášení.</p>'
           : `<p>💾 <b>Offline režim</b> – data jsou jen v tomto prohlížeči na tomto počítači.</p>
-             <p class="small muted">Pro přihlašování a přístup odkudkoli připojte Supabase (návod v README.md, soubor <code>js/config.js</code>).
-             Před přechodem si stáhněte zálohu a po připojení ji nahrajte.</p>`}
+             <p class="small muted">Pro přihlašování a přístup odkudkoli připojte Firebase (návod v README.md, soubor <code>js/config.js</code>).
+             Data z tohoto prohlížeče se při prvním přihlášení do databáze přenesou sama.</p>`}
         <p class="small">Uloženo: ${n('lessons')} hodin · ${n('vocab')} slovíček · ${n('topics')} témat · ${n('resources')} zdrojů</p>
+      </section>
+      <section class="card stack" id="prep" hidden>
+        <h2>Připravené hodiny od Clauda</h2>
+        <p class="small muted">Připravené hodiny jsou na webu zašifrované. Zadejte jednou heslo webu (Dokumenty\\Anglictina\\heslo-webu.txt) – uloží se k vašemu účtu a hodiny se budou načítat na každém zařízení.</p>
+        <form id="unlock" class="row"><input type="password" name="pw" placeholder="Heslo webu" autocomplete="off" style="flex:1"><button class="btn primary">Odemknout</button></form>
       </section>
       <section class="card stack">
         <h2>Záloha</h2>
@@ -31,6 +36,18 @@ export function renderSettings(view) {
         <p class="small muted">Rozvrh je v souboru <code>js/curriculum.js</code>.</p>
       </section>
     </div>`;
+
+  store.preparedLocked().then((l) => { const s = $('#prep', view); if (s) s.hidden = !l; });
+  $('#unlock', view).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await store.unlockPrepared(new FormData(e.target).get('pw'));
+      toast('Připravené hodiny odemčené a načtené.');
+      renderSettings(view);
+    } catch (err) {
+      toast(err.message, 'err');
+    }
+  });
 
   $('#export', view).addEventListener('click', () => {
     const a = document.createElement('a');

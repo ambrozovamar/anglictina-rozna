@@ -1,11 +1,13 @@
-// Datová vrstva: stejné rozhraní pro Supabase (online) i localStorage (offline režim).
+// Datová vrstva: stejné rozhraní pro Firebase (online) i localStorage (offline režim).
 // Všechna data se po přihlášení načtou do paměti (je jich málo), zápisy jdou rovnou do úložiště.
 //
 // Každý záznam má tvar { id, grade, visible, ...další pole }.
-// V databázi se ukládá jako řádek { id, owner, grade, visible_to_students, data (jsonb), updated_at }.
+// Ve Firestore se ukládá jako dokument kolekce lessons / vocab / resources / topics:
+//   { owner (uid učitelky), grade, visible, data (mapa ostatních polí), updated_at }
 // `visible` = připraveno pro další krok: přístup dětí k vybraným lekcím a zdrojům.
+// Profil uživatele: users/{uid} = { keys (klíč k připraveným hodinám), preparedDone [] }.
 
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { FIREBASE_CONFIG } from './config.js';
 import { uid } from './util.js';
 import { GRADE_IDS, TOPICS, DEFAULT_RESOURCES } from './curriculum.js';
 import { slotFor } from './schedule.js';
@@ -14,27 +16,48 @@ import { deriveKeys, decrypt } from './crypto.js';
 export const TABLES = ['lessons', 'vocab', 'resources', 'topics'];
 const LS_KEY = 'aj-rozna-data-v1';
 const LS_SESSION = 'aj-rozna-offline-session';
+const LS_KEYS = 'aj-rozna-keys';
+const LS_PREPARED = 'aj-rozna-prepared-imported';
 
-export const online = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const online = Boolean(FIREBASE_CONFIG);
 
-let sb = null; // klient Supabase
 const cache = Object.fromEntries(TABLES.map((t) => [t, []]));
 let user = null;
+let profile = {}; // users/{uid} (online)
 
-async function client() {
-  if (!sb) {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
-    sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ---------- Firebase (načte se jen v online režimu) ----------
+
+const FB = 'https://www.gstatic.com/firebasejs/10.12.2/';
+let fb = null;
+async function firebase() {
+  if (!fb) {
+    const [app, auth, fs] = await Promise.all([
+      import(FB + 'firebase-app.js'),
+      import(FB + 'firebase-auth.js'),
+      import(FB + 'firebase-firestore.js'),
+    ]);
+    const a = app.initializeApp(FIREBASE_CONFIG);
+    fb = { auth, fs, authInst: auth.getAuth(a), db: fs.getFirestore(a) };
+    fb.authInst.languageCode = 'cs';
   }
-  return sb;
+  return fb;
 }
 
-// ---------- Přihlášení ----------
+const AUTH_ERRORS = {
+  'auth/invalid-credential': 'Špatný e-mail nebo heslo.',
+  'auth/invalid-email': 'Neplatný e-mail.',
+  'auth/user-disabled': 'Účet je zablokovaný.',
+  'auth/too-many-requests': 'Příliš mnoho pokusů. Zkuste to za chvíli.',
+  'auth/network-request-failed': 'Chyba připojení k internetu.',
+  'permission-denied': 'K datům nemáte přístup (účet není nastavený jako učitel).',
+};
+const fbError = (e) => new Error(AUTH_ERRORS[e?.code] || e?.message || String(e));
 
-// Heslo webu (offline režim): data/prepared/key.json obsahuje sůl a zašifrovanou kontrolu.
-// Bez key.json web heslo nevyžaduje. Do prohlížeče se ukládají odvozené klíče, ne heslo.
-const LS_KEYS = 'aj-rozna-keys';
-export let locked = false;
+// ---------- Heslo k připraveným hodinám ----------
+// data/prepared/key.json obsahuje sůl a zašifrovanou kontrolu. Ukládají se odvozené klíče, ne heslo:
+// offline v prohlížeči, online navíc v profilu učitelky (aby fungovaly na každém zařízení).
+
+export let locked = false; // web má zašifrované připravené hodiny
 let lockInfo;
 
 async function siteLock() {
@@ -50,11 +73,12 @@ async function siteLock() {
   return lockInfo;
 }
 
-const keys = () => localStorage.getItem(LS_KEYS) || '';
+const keys = () => localStorage.getItem(LS_KEYS) || profile.keys || '';
 
 async function keysValid(k) {
   const lock = await siteLock();
   if (!lock) return true;
+  if (!k) return false;
   try {
     await decrypt(lock.check, k);
     return true;
@@ -63,15 +87,33 @@ async function keysValid(k) {
   }
 }
 
+// Online: jsou připravené hodiny odemčené? (jinak se v Nastavení zobrazí pole pro heslo)
+export const preparedLocked = async () => locked && !(await keysValid(keys()));
+
+export async function unlockPrepared(password) {
+  const lock = await siteLock();
+  if (!lock) return;
+  const k = await deriveKeys(password, lock.salt, lock.iter);
+  if (!(await keysValid(k))) throw new Error('Špatné heslo.');
+  localStorage.setItem(LS_KEYS, k);
+  if (online) await saveProfile({ keys: k });
+  await importPrepared();
+}
+
+// ---------- Přihlášení ----------
+
 export async function currentUser() {
+  await siteLock();
   if (!online) {
-    await siteLock();
     const ok = localStorage.getItem(LS_SESSION) && (await keysValid(keys()));
     user = ok ? { email: 'offline', offline: true } : null;
     return user;
   }
-  const { data } = await (await client()).auth.getSession();
-  user = data.session?.user || null;
+  const { auth, authInst } = await firebase();
+  await authInst.authStateReady();
+  const u = authInst.currentUser;
+  user = u ? { uid: u.uid, email: u.email } : null;
+  if (user) await loadProfile();
   return user;
 }
 
@@ -87,8 +129,12 @@ export async function signIn(email, password) {
     localStorage.setItem(LS_SESSION, '1');
     return currentUser();
   }
-  const { error } = await (await client()).auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message === 'Invalid login credentials' ? 'Špatný e-mail nebo heslo.' : error.message);
+  const { auth, authInst } = await firebase();
+  try {
+    await auth.signInWithEmailAndPassword(authInst, email.trim(), password);
+  } catch (e) {
+    throw fbError(e);
+  }
   return currentUser();
 }
 
@@ -96,23 +142,49 @@ export async function signOut() {
   if (!online) {
     localStorage.removeItem(LS_SESSION);
     localStorage.removeItem(LS_KEYS);
+  } else {
+    const { auth, authInst } = await firebase();
+    await auth.signOut(authInst);
+    localStorage.removeItem(LS_KEYS);
   }
-  else await (await client()).auth.signOut();
   user = null;
+  profile = {};
   TABLES.forEach((t) => (cache[t] = []));
 }
 
 export async function resetPassword(email) {
-  const { error } = await (await client()).auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-  if (error) throw new Error(error.message);
+  const { auth, authInst } = await firebase();
+  try {
+    await auth.sendPasswordResetEmail(authInst, email.trim());
+  } catch (e) {
+    throw fbError(e);
+  }
+}
+
+async function loadProfile() {
+  const { fs, db } = await firebase();
+  try {
+    const s = await fs.getDoc(fs.doc(db, 'users', user.uid));
+    profile = s.exists() ? s.data() : {};
+  } catch {
+    profile = {};
+  }
+}
+
+async function saveProfile(patch) {
+  profile = { ...profile, ...patch };
+  const { fs, db } = await firebase();
+  await fs.setDoc(fs.doc(db, 'users', user.uid), patch, { merge: true });
 }
 
 // ---------- Načtení a zápis ----------
 
-const fromRow = (r) => ({ ...(r.data || {}), id: r.id, grade: r.grade, visible: r.visible_to_students, updated_at: r.updated_at });
-const toRow = (o) => {
+// Firestore nepřijímá undefined – projdeme přes JSON.
+const clean = (o) => JSON.parse(JSON.stringify(o));
+const fromDoc = (id, d) => ({ ...(d.data || {}), id, grade: d.grade ?? null, visible: Boolean(d.visible), updated_at: d.updated_at });
+const toDoc = (o) => {
   const { id, grade, visible, updated_at, ...data } = o;
-  return { id, grade: grade ?? null, visible_to_students: Boolean(visible), data, updated_at: new Date().toISOString() };
+  return { owner: user.uid, grade: grade ?? null, visible: Boolean(visible), data: clean(data), updated_at: updated_at || new Date().toISOString() };
 };
 
 function readLocal() {
@@ -131,23 +203,41 @@ export async function loadAll() {
     const d = readLocal();
     TABLES.forEach((t) => (cache[t] = d[t] || []));
   } else {
-    const c = await client();
+    const { fs, db } = await firebase();
     for (const t of TABLES) {
-      const { data, error } = await c.from(t).select('*');
-      if (error) throw new Error(`Nepodařilo se načíst ${t}: ${error.message}`);
-      cache[t] = data.map(fromRow);
+      try {
+        const snap = await fs.getDocs(fs.query(fs.collection(db, t), fs.where('owner', '==', user.uid)));
+        cache[t] = snap.docs.map((d) => fromDoc(d.id, d.data()));
+      } catch (e) {
+        throw new Error(`Nepodařilo se načíst ${t}: ${fbError(e).message}`);
+      }
     }
+    await migrateLocal();
   }
   await seedIfEmpty();
   await importPrepared();
 }
 
-// Připravené hodiny (data/prepared/*.json) – připravuje je Claude a nahrává do repozitáře.
-// Každá hodina se naimportuje jen jednou (pamatuje si to prohlížeč) a nikdy nepřepíše
-// hodinu, kterou už máte na stejný den. Slovíčka se přidají, jen pokud v bance ještě nejsou.
-const LS_PREPARED = 'aj-rozna-prepared-imported';
+// První přihlášení k databázi: data z offline režimu v tomto prohlížeči se přenesou do Firestore.
+export let migrated = 0;
+async function migrateLocal() {
+  const d = readLocal();
+  const local = TABLES.reduce((n, t) => n + (d[t]?.length || 0), 0);
+  if (!local || cache.topics.length) return;
+  // Starší importy připravených hodin nemají updated_at – označíme je jako neupravené.
+  const now = new Date().toISOString();
+  (d.lessons || []).forEach((l) => { if (!l.updated_at) l.updated_at = l.importedAt = now; });
+  for (const t of TABLES) if (d[t]?.length) await saveMany(t, d[t]);
+  migrated = local;
+  localStorage.setItem(LS_KEY + '-migrated', localStorage.getItem(LS_KEY));
+  localStorage.removeItem(LS_KEY);
+}
 
+// Připravené hodiny (data/prepared/*.enc) – připravuje je Claude a nahrává do repozitáře.
+// Nová hodina se naimportuje jednou a nikdy nepřepíše hodinu, kterou už máte na stejný den.
+// Slovíčka se přidají, jen pokud v bance ještě nejsou.
 async function importPrepared() {
+  if (!(await keysValid(keys()))) return;
   let files;
   try {
     const r = await fetch('data/prepared/index.json', { cache: 'no-store' });
@@ -158,10 +248,11 @@ async function importPrepared() {
   }
   let done;
   try {
-    done = new Set(JSON.parse(localStorage.getItem(LS_PREPARED) || '[]'));
+    done = new Set([...JSON.parse(localStorage.getItem(LS_PREPARED) || '[]'), ...(profile.preparedDone || [])]);
   } catch {
-    done = new Set();
+    done = new Set(profile.preparedDone || []);
   }
+  const before = done.size;
   const topicId = (grade, title) => cache.topics.find((t) => t.grade === grade && t.title === title)?.id || '';
   const vocabKey = (grade, term) => `${grade}|${term.trim().toLowerCase()}`;
 
@@ -175,8 +266,8 @@ async function importPrepared() {
     } catch {
       continue;
     }
-    // Nová hodina se naimportuje jednou. Novější verze (rev) přepíše dřívější import,
-    // jen pokud ho učitelka mezitím neupravila (updated_at se nezměnil od importu).
+    // Novější verze (rev) přepíše dřívější import, jen pokud ho učitelka mezitím neupravila
+    // (updated_at se nezměnil od importu).
     const pending = (data.lessons || []).filter((l) => {
       const ex = cache.lessons.find((x) => x.id === l.id);
       if (ex) return (l.rev || 1) > (ex.preparedRev || 1) && ex.updated_at === ex.importedAt;
@@ -224,6 +315,7 @@ async function importPrepared() {
   try {
     localStorage.setItem(LS_PREPARED, JSON.stringify([...done]));
   } catch {}
+  if (online && done.size !== before) await saveProfile({ preparedDone: [...done] });
 }
 
 // První spuštění: založí témata z tematických plánů a základní externí nástroje.
@@ -259,8 +351,12 @@ export async function save(table, obj) {
   else cache[table].push(o);
   if (!online) writeLocal();
   else {
-    const { error } = await (await client()).from(table).upsert(toRow(o));
-    if (error) throw new Error('Uložení selhalo: ' + error.message);
+    const { fs, db } = await firebase();
+    try {
+      await fs.setDoc(fs.doc(db, table, o.id), toDoc(o));
+    } catch (e) {
+      throw new Error('Uložení selhalo: ' + fbError(e).message);
+    }
   }
   return o;
 }
@@ -275,8 +371,16 @@ export async function saveMany(table, objs) {
   });
   if (!online) writeLocal();
   else {
-    const { error } = await (await client()).from(table).upsert(objs.map(toRow));
-    if (error) throw new Error('Uložení selhalo: ' + error.message);
+    const { fs, db } = await firebase();
+    try {
+      for (let k = 0; k < objs.length; k += 400) {
+        const b = fs.writeBatch(db);
+        objs.slice(k, k + 400).forEach((o) => b.set(fs.doc(db, table, o.id), toDoc(o)));
+        await b.commit();
+      }
+    } catch (e) {
+      throw new Error('Uložení selhalo: ' + fbError(e).message);
+    }
   }
 }
 
@@ -284,8 +388,12 @@ export async function remove(table, id) {
   cache[table] = cache[table].filter((x) => x.id !== id);
   if (!online) writeLocal();
   else {
-    const { error } = await (await client()).from(table).delete().eq('id', id);
-    if (error) throw new Error('Smazání selhalo: ' + error.message);
+    const { fs, db } = await firebase();
+    try {
+      await fs.deleteDoc(fs.doc(db, table, id));
+    } catch (e) {
+      throw new Error('Smazání selhalo: ' + fbError(e).message);
+    }
   }
 }
 
