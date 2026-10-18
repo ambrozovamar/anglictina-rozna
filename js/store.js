@@ -175,9 +175,13 @@ async function importPrepared() {
     } catch {
       continue;
     }
-    const pending = (data.lessons || []).filter(
-      (l) => !done.has(l.id) && !cache.lessons.some((x) => x.id === l.id || (x.grade === l.grade && x.date === l.date))
-    );
+    // Nová hodina se naimportuje jednou. Novější verze (rev) přepíše dřívější import,
+    // jen pokud ho učitelka mezitím neupravila (updated_at se nezměnil od importu).
+    const pending = (data.lessons || []).filter((l) => {
+      const ex = cache.lessons.find((x) => x.id === l.id);
+      if (ex) return (l.rev || 1) > (ex.preparedRev || 1) && ex.updated_at === ex.importedAt;
+      return !done.has(l.id) && !cache.lessons.some((x) => x.grade === l.grade && x.date === l.date);
+    });
     if (!pending.length) {
       (data.lessons || []).forEach((l) => done.add(l.id));
       continue;
@@ -197,10 +201,14 @@ async function importPrepared() {
     await saveMany('vocab', newVocab);
 
     // Hodiny
+    const now = new Date().toISOString();
     const lessons = pending.map((l) => {
-      const { topicTitle, vocabTerms, ...rest } = l;
+      const { topicTitle, vocabTerms, rev, ...rest } = l;
       const slot = slotFor(l.grade, l.date) || {};
       return {
+        preparedRev: rev || 1,
+        importedAt: now,
+        updated_at: now,
         period: slot.period || '',
         minutes: slot.minutes || 45,
         equipment: slot.equipment || '',
