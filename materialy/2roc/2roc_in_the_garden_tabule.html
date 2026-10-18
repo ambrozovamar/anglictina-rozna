@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In the Garden</title>
+<!--
+  Metodická poznámka (pro učitele)
+  Ročník: 2., pre-A1. Úvod k příběhu In the garden (A Ball Story) – slovní zásoba a předložky in / on.
+  1) Look: ťukejte na věci v zahradě. Tabule slovo ukáže (a s 🔈 i řekne). Děti opakují tiše / nahlas / pomalu / rychle.
+  2) What's missing?: „Close your eyes!“ – jedna věc zmizí, děti řeknou, co chybí. Kdo to řekne, ťukne na „Show“.
+  3) Where's the ball?: míč skočí na nové místo. Děti řeknou „In the tree!“ / „On the grass!“, potom ťukněte na „Say it“ a celá třída zopakuje celou větu.
+  Pohyb: s kartami na koberci – „Run around the tree! Jump over the ball!“.
+  Diferenciace: základ = ukázat a říct slovo; challenge = celá věta „The ball is in the tree.“, zapnout psaná slova (Aa);
+    podpora = dítě je „pomocník“ u tabule a ťuká, nebo jen ukazuje.
+  Vlastní ilustrace, bez chráněných postav. Funguje offline a dotykem.
+-->
+<style>
+  :root { --bg: #f4f8f1; --ink: #1f2a1d; --muted: #5f6b5b; --card: #ffffff; --line: #d6e0cf; --accent: #2e7d32; --hi: #ff9800; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161b15; --ink: #eef3ea; --muted: #a9b5a3; --card: #232a21; --line: #3a4636; } }
+  :root[data-theme="dark"] { --bg: #161b15; --ink: #eef3ea; --muted: #a9b5a3; --card: #232a21; --line: #3a4636; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; user-select: none; }
+  header { display: flex; gap: 8px; align-items: center; padding: 10px 16px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; margin: 0 12px 0 0; }
+  .tab, .btn { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; min-height: 48px; }
+  .tab.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .spacer { flex: 1; }
+  main { flex: 1; display: flex; flex-direction: column; padding: 0 16px 12px; min-height: 0; }
+  .scene { flex: 1; min-height: 0; display: flex; justify-content: center; }
+  svg { height: 100%; max-width: 100%; border-radius: 22px; touch-action: manipulation; }
+  .item { cursor: pointer; transition: opacity .3s, filter .2s; }
+  .item.hi { filter: drop-shadow(0 0 6px var(--hi)) drop-shadow(0 0 10px var(--hi)); }
+  .item.gone { opacity: 0; pointer-events: none; }
+  #ball { transition: transform .6s cubic-bezier(.3,1.5,.5,1); }
+  .bar { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 10px; min-height: 56px; }
+  .caption { font-size: clamp(26px, 4.5vw, 52px); font-weight: 800; text-align: center; min-height: 1.3em; }
+  .caption.hidden { visibility: hidden; }
+  .lbl { font: 800 30px "Segoe UI", Arial, sans-serif; fill: #1f2a1d; paint-order: stroke; stroke: #fff; stroke-width: 6px; display: none; pointer-events: none; }
+  .words .lbl { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌳 In the garden</h1>
+  <button class="tab on" data-mode="look">👀 Look</button>
+  <button class="tab" data-mode="missing">🙈 What's missing?</button>
+  <button class="tab" data-mode="ball">⚽ Where's the ball?</button>
+  <span class="spacer"></span>
+  <button class="btn" id="words" title="Show written words">Aa</button>
+  <button class="btn" id="sound" title="Voice on/off">🔇</button>
+</header>
+<main>
+  <div class="caption" id="cap">Tap the garden!</div>
+  <div class="scene">
+    <svg viewBox="0 0 1000 600" id="svg" role="img" aria-label="A garden with a house, a tree, flowers, grass and a ball">
+      <rect width="1000" height="600" fill="#bfe3ff"/>
+      <circle cx="880" cy="90" r="50" fill="#ffd54f"/>
+      <g class="item" data-word="garden"><rect x="0" y="330" width="1000" height="270" fill="#a5d6a7"/></g>
+      <g class="item" data-word="house" id="house">
+        <rect x="80" y="200" width="250" height="200" fill="#ffcc80" stroke="#5d4037" stroke-width="5"/>
+        <path d="M60 210 L205 95 L350 210 Z" fill="#e57373" stroke="#5d4037" stroke-width="5" stroke-linejoin="round"/>
+        <rect x="180" y="300" width="60" height="100" fill="#8d6e63" stroke="#5d4037" stroke-width="4"/>
+        <rect x="105" y="240" width="55" height="50" fill="#e3f2fd" stroke="#5d4037" stroke-width="4"/>
+        <rect x="255" y="240" width="55" height="50" fill="#e3f2fd" stroke="#5d4037" stroke-width="4"/>
+        <text class="lbl" x="205" y="440" text-anchor="middle">house</text>
+      </g>
+      <g class="item" data-word="tree" id="tree">
+        <rect x="615" y="250" width="50" height="170" fill="#8d6e63" stroke="#5d4037" stroke-width="4"/>
+        <circle cx="640" cy="200" r="105" fill="#43a047" stroke="#2e7d32" stroke-width="5"/>
+        <circle cx="575" cy="245" r="60" fill="#4caf50" stroke="#2e7d32" stroke-width="5"/>
+        <circle cx="710" cy="245" r="60" fill="#4caf50" stroke="#2e7d32" stroke-width="5"/>
+        <text class="lbl" x="640" y="90" text-anchor="middle">tree</text>
+      </g>
+      <g class="item" data-word="grass" id="grass">
+        <path d="M380 520 l15 -45 l10 45 l12 -55 l10 55 l14 -40 l9 40 l13 -50 l10 50 l15 -45 l8 45 Z" fill="#2e7d32"/>
+        <path d="M720 545 l12 -40 l10 40 l14 -50 l9 50 l13 -42 l10 42 Z" fill="#2e7d32"/>
+        <text class="lbl" x="440" y="565" text-anchor="middle">grass</text>
+      </g>
+      <g class="item" data-word="flower" id="flower">
+        <g transform="translate(860 430)">
+          <rect x="-4" y="0" width="8" height="90" fill="#388e3c"/>
+          <g fill="#f06292" stroke="#ad1457" stroke-width="3"><circle cx="0" cy="-28" r="20"/><circle cx="27" cy="-8" r="20"/><circle cx="17" cy="24" r="20"/><circle cx="-17" cy="24" r="20"/><circle cx="-27" cy="-8" r="20"/></g>
+          <circle cx="0" cy="2" r="16" fill="#ffeb3b" stroke="#f9a825" stroke-width="3"/>
+        </g>
+        <g transform="translate(790 470) scale(.7)">
+          <rect x="-4" y="0" width="8" height="90" fill="#388e3c"/>
+          <g fill="#ffb74d" stroke="#e65100" stroke-width="3"><circle cx="0" cy="-28" r="20"/><circle cx="27" cy="-8" r="20"/><circle cx="17" cy="24" r="20"/><circle cx="-17" cy="24" r="20"/><circle cx="-27" cy="-8" r="20"/></g>
+          <circle cx="0" cy="2" r="16" fill="#ffeb3b" stroke="#f9a825" stroke-width="3"/>
+        </g>
+        <text class="lbl" x="850" y="395" text-anchor="middle">flower</text>
+      </g>
+      <g class="item" data-word="ball" id="ball">
+        <circle cx="0" cy="0" r="34" fill="#e53935" stroke="#7f0000" stroke-width="4"/>
+        <path d="M-34 0 Q0 22 34 0" fill="none" stroke="#fff" stroke-width="6"/>
+        <path d="M-24 -24 Q0 -6 24 -24" fill="none" stroke="#fff" stroke-width="5"/>
+        <text class="lbl" x="0" y="-48" text-anchor="middle">ball</text>
+      </g>
+    </svg>
+  </div>
+  <div class="bar" id="bar"></div>
+</main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const ITEMS = ['garden', 'house', 'tree', 'grass', 'flower', 'ball'];
+  // Pozice míče: [x, y, věta]
+  const SPOTS = [
+    [640, 185, 'The ball is in the tree.'],
+    [470, 500, 'The ball is on the grass.'],
+    [205, 150, 'The ball is on the house.'],
+    [208, 268, 'The ball is in the house.'],
+    [860, 360, 'The ball is on the flower.'],
+    [560, 430, 'The ball is in the garden.'],
+  ];
+  let mode = 'look', spot = 1, hiddenItem = null, voiceOn = false, voice = null;
+
+  function pickVoice() {
+    const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    voice = vs.find((v) => v.lang === 'en-GB') || vs.find((v) => /^en/.test(v.lang)) || null;
+  }
+  if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak(t) {
+    if (!voiceOn || !window.speechSynthesis) return;
+    const u = new SpeechSynthesisUtterance(t); u.lang = 'en-GB'; if (voice) u.voice = voice; u.rate = 0.85;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }
+  const cap = (t, hidden = false) => { $('#cap').textContent = t; $('#cap').classList.toggle('hidden', hidden); };
+  const items = () => [...document.querySelectorAll('.item')];
+  const placeBall = () => { const [x, y] = SPOTS[spot]; $('#ball').setAttribute('transform', `translate(${x} ${y})`); };
+
+  $('#words').onclick = () => document.body.classList.toggle('words');
+  $('#sound').onclick = () => { voiceOn = !voiceOn; $('#sound').textContent = voiceOn ? '🔈' : '🔇'; };
+
+  $('#svg').addEventListener('click', (e) => {
+    const it = e.target.closest('.item');
+    if (!it || mode !== 'look') return;
+    items().forEach((x) => x.classList.toggle('hi', x === it));
+    const w = it.dataset.word;
+    cap(w === 'garden' ? 'a garden' : 'a ' + w);
+    speak(w);
+  });
+
+  const BAR = {
+    look: () => `<span class="muted">Tap a picture – listen and say!</span>`,
+    missing: () => `<button class="btn" id="close">🙈 Close your eyes!</button> <button class="btn" id="show">👀 Show</button>`,
+    ball: () => `<button class="btn" id="jump">⚽ Where's the ball?</button> <button class="btn" id="tell">🗣 Say it</button>`,
+  };
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+    items().forEach((x) => x.classList.remove('hi', 'gone'));
+    hiddenItem = null;
+    $('#bar').innerHTML = BAR[m]();
+    if (m === 'look') cap('Tap the garden!');
+    if (m === 'missing') {
+      cap("What's missing?", true);
+      $('#close').onclick = () => {
+        items().forEach((x) => x.classList.remove('gone'));
+        const pool = ITEMS.filter((w) => w !== 'garden' && w !== hiddenItem);
+        hiddenItem = pool[Math.floor(Math.random() * pool.length)];
+        document.querySelector(`[data-word="${hiddenItem}"]`).classList.add('gone');
+        cap("What's missing?");
+        speak("What's missing?");
+      };
+      $('#show').onclick = () => {
+        if (!hiddenItem) return;
+        const it = document.querySelector(`[data-word="${hiddenItem}"]`);
+        it.classList.remove('gone'); it.classList.add('hi');
+        cap(`The ${hiddenItem}!`); speak(`The ${hiddenItem}!`);
+      };
+    }
+    if (m === 'ball') {
+      cap("Where's the ball?", false);
+      $('#jump').onclick = () => {
+        let n; do { n = Math.floor(Math.random() * SPOTS.length); } while (n === spot);
+        spot = n; placeBall(); cap("Where's the ball?"); speak("Where's the ball?");
+      };
+      $('#tell').onclick = () => { cap(SPOTS[spot][2]); speak(SPOTS[spot][2]); };
+    }
+  }
+  document.querySelectorAll('[data-mode]').forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
+  placeBall();
+  setMode('look');
+})();
+</script>
+</body>
+</html>

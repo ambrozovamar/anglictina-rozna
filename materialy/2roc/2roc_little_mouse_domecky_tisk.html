@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Little Mouse Houses</title>
+<style>
+  :root { --ink: #111; --muted: #555; --line: #222; --bg: #fff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #fff; } }
+  :root[data-theme="dark"] { --bg: #fff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e6e0; color: var(--ink); font: 11pt/1.35 Arial, Helvetica, sans-serif; }
+  .page { width: 210mm; min-height: 297mm; margin: 10px auto; background: var(--bg); padding: 12mm; break-after: page; }
+  .page:last-child { break-after: auto; }
+  h1 { font-size: 22pt; margin: 0 0 2mm; }
+  h2 { font-size: 13pt; margin: 6mm 0 2mm; }
+  .name { font-size: 13pt; margin-bottom: 6mm; }
+  .grid { display: grid; gap: 6mm 8mm; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .game { gap: 3mm 10mm; padding: 0 8mm; }
+  .game .w { font-size: 12pt; margin-top: 0; }
+  .h { text-align: center; }
+  .h svg { width: 100%; height: auto; }
+  .w { font-size: 22pt; font-weight: 700; margin-top: 1mm; letter-spacing: .5px; }
+  .mice { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6mm; margin-top: 4mm; }
+  .mice div { border: 1.5px dashed #888; border-radius: 4mm; padding: 3mm; text-align: center; }
+  .note { font-size: 10pt; }
+  .note li { margin-bottom: 1.5mm; }
+  .muted { color: var(--muted); }
+  @page { size: A4; margin: 0; }
+  @media print { body { background: #fff; } .page { margin: 0; } }
+  @media screen and (max-width: 840px) { .page { width: auto; min-height: 0; margin: 0 0 12px; padding: 16px; } }
+</style>
+</head>
+<body>
+
+<!-- Strana 1: pracovní list pro děti -->
+<section class="page">
+  <h1>Read and colour. 🖍</h1>
+  <div class="name">Name: ..............................................</div>
+  <div class="grid g3" id="sheet"></div>
+  <h2>Where's the mouse? Draw the mouse in one house. 🐭</h2>
+  <p class="muted" style="font-size:10pt">Show your friend: „Little mouse, little mouse, are you in the … house?“</p>
+</section>
+
+<!-- Strana 2: domečky pro hru na koberci -->
+<section class="page">
+  <h1 style="font-size:16pt">Little mouse – domečky pro hru na koberci</h1>
+  <p class="muted" style="font-size:10pt;margin:0 0 4mm">Vytiskněte 1× barevně (ideálně na tvrdší papír / zalaminovat) a rozstříhejte. Nebo vytiskněte černobíle na barevné papíry.</p>
+  <div class="grid g3 game" id="game"></div>
+</section>
+
+<!-- Strana 3: myšky + metodická poznámka -->
+<section class="page note">
+  <h2 style="margin-top:0">Myšky na vystřižení (stačí jedna, další do zásoby)</h2>
+  <div class="mice" id="mice"></div>
+  <h1 style="font-size:16pt;margin-top:6mm">Metodická poznámka</h1>
+  <p><b>Ročník:</b> 2. · <b>úroveň:</b> pre-A1 · <b>téma:</b> barvy (Barvy, čísla do 12, A Ball Story) · <b>čas:</b> hra 6–7 min, pracovní list 4–5 min</p>
+  <h2>Hra Little mouse (na koberci nebo na tabuli)</h2>
+  <ol>
+    <li>Domečky položte do kruhu na koberec, děti sedí kolem. „Close your eyes!“ – jedno dítě (nebo učitel) schová myšku pod jeden domeček.</li>
+    <li>Všichni společně: <i>„Little mouse, little mouse, are you in the … house?“</i> Hádající dítě doplní barvu a zvedne domeček.</li>
+    <li>Kdo myšku najde, schovává ji v dalším kole. Pravidlo: zvedá jen ten, kdo celou větu (nebo aspoň barvu) řekl nahlas.</li>
+    <li>Stejná hra je i na tabuli: <b>2roc_barvy_cisla_hry_tabule.html</b> → 🐭 Little mouse.</li>
+  </ol>
+  <h2>Pracovní list Read and colour</h2>
+  <ul>
+    <li>První setkání s psanou podobou: dítě přečte (s pomocí) slovo a domeček vybarví. Nejdřív společně ukázat a přečíst nahlas.</li>
+    <li>Kdo je hotový: nakreslí do jednoho domečku myšku a soused hádá „Are you in the … house?“</li>
+  </ul>
+  <h2>Diferenciace</h2>
+  <ul>
+    <li><b>Základ:</b> barvy poznat, říct a vybarvit podle slova.</li>
+    <li><b>⭐ Challenge:</b> dítě vede hru („Close your eyes!“), říká celou větu samo; na listu pozná slovo bez pomoci.</li>
+    <li><b>🤝 Podpora:</b> učitel u slova ukáže pastelku správné barvy; dítě v hře stačí, když řekne barvu.</li>
+  </ul>
+  <h2>Řešení</h2>
+  <p>red – červená · blue – modrá · green – zelená · yellow – žlutá · pink – růžová · orange – oranžová</p>
+  <p class="muted">Vlastní ilustrace, bez chráněných postav. Text „Little mouse, little mouse…“ je tradiční dětská říkanka-hra.</p>
+</section>
+
+<script>
+  const house = (fill, roof = fill, w = 2.5) => `
+    <svg viewBox="0 0 100 92" aria-hidden="true">
+      <rect x="18" y="38" width="64" height="50" rx="2" fill="${fill}" stroke="#222" stroke-width="${w}"/>
+      <path d="M8 40 L50 6 L92 40 Z" fill="${roof}" stroke="#222" stroke-width="${w}" stroke-linejoin="round"/>
+      <rect x="42" y="60" width="16" height="28" fill="#fff" stroke="#222" stroke-width="2"/>
+      <rect x="25" y="48" width="13" height="11" fill="#fff" stroke="#222" stroke-width="2"/>
+      <rect x="62" y="48" width="13" height="11" fill="#fff" stroke="#222" stroke-width="2"/>
+    </svg>`;
+  const sheet = ['red', 'blue', 'green', 'yellow', 'pink', 'orange'];
+  document.getElementById('sheet').innerHTML = sheet.map((c) => `<div class="h">${house('#fff')}<div class="w">${c}</div></div>`).join('');
+  const COL = { red: '#e53935', pink: '#f06292', blue: '#1e88e5', green: '#43a047', yellow: '#fdd835', orange: '#fb8c00', purple: '#8e24aa', brown: '#8d6e63', black: '#263238', white: '#ffffff' };
+  document.getElementById('game').innerHTML = Object.entries(COL).map(([c, v]) => `<div class="h">${house(v)}<div class="w">${c}</div></div>`).join('');
+  const mouse = `<svg viewBox="-30 -24 64 46" width="130" aria-hidden="true">
+      <ellipse cx="0" cy="8" rx="15" ry="11" fill="#bbb" stroke="#222" stroke-width="1.5"/>
+      <circle cx="-10" cy="-4" r="6" fill="#ddd" stroke="#222" stroke-width="1.5"/><circle cx="10" cy="-4" r="6" fill="#ddd" stroke="#222" stroke-width="1.5"/>
+      <circle cx="0" cy="2" r="10" fill="#bbb" stroke="#222" stroke-width="1.5"/>
+      <circle cx="-4" cy="0" r="1.6" fill="#111"/><circle cx="4" cy="0" r="1.6" fill="#111"/><circle cx="0" cy="5" r="2" fill="#555"/>
+      <path d="M15 12 q12 4 8 -8" fill="none" stroke="#222" stroke-width="1.5"/></svg>`;
+  document.getElementById('mice').innerHTML = mouse.repeat(4).split('</svg>').filter(Boolean).map((s) => `<div>${s}</svg></div>`).join('');
+</script>
+</body>
+</html>

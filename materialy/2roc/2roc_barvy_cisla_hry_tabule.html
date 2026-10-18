@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Colours and Numbers</title>
+<!--
+  Metodická poznámka (pro učitele)
+  Ročník: 2., úroveň pre-A1. Hodina po obědě: krátké kolo, 5–7 min, hodně pohybu.
+  Hra 1 – Little mouse (barvy): na tabuli je 10 barevných domečků, v jednom je schovaná myška.
+    Děti společně říkají „Little mouse, little mouse, are you in the … house?“. Jedno dítě doplní barvu a ťukne na domeček.
+    Pravidlo: ťuká jen ten, kdo celou větu řekl (nebo aspoň barvu). Kdo myšku najde, schová ji příště (tlačítko Hide).
+  Hra 2 – Ring it! (čísla 1–12, barvy): učitel (nebo tabule hlasem) řekne číslo či barvu.
+    Když řekne správně, nikdo nic nedělá. Když se splete, děti co nejrychleji zazvoní (zvonek na stole / tlačítko 🔔).
+    „Don't say it – ring it!“ Kdo zazvoní u správného slova, vynechá jedno kolo.
+  Diferenciace: základ = poznat barvu/číslo; challenge = zapnout psaná slova (Aa), říct správné slovo po zazvonění;
+    podpora = dítě stojí u tabule jako „pomocník“ a ťuká, ostatní říkají.
+  Vše funguje offline, dotykem. Hlas (🔊) použije britskou angličtinu, pokud ji počítač má.
+-->
+<style>
+  :root {
+    --bg: #fbf8f2; --ink: #23201b; --muted: #6b655b; --card: #ffffff; --line: #e2dbcf; --accent: #e07a1f;
+    --ok: #2f8f4e; --bad: #c0392b;
+    --red: #e53935; --pink: #f06292; --blue: #1e88e5; --green: #43a047; --yellow: #fdd835;
+    --orange: #fb8c00; --purple: #8e24aa; --brown: #8d6e63; --black: #263238; --white: #fafafa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1d1b18; --ink: #f1ece4; --muted: #b3ab9e; --card: #2a2723; --line: #423d36; }
+  }
+  :root[data-theme="dark"] { --bg: #1d1b18; --ink: #f1ece4; --muted: #b3ab9e; --card: #2a2723; --line: #423d36; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; user-select: none; }
+  header { display: flex; gap: 8px; align-items: center; padding: 10px 16px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; margin: 0 12px 0 0; }
+  .tab, .btn { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; min-height: 48px; }
+  .tab.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .btn:active, .tab:active { transform: scale(.97); }
+  .spacer { flex: 1; }
+  main { flex: 1; display: flex; flex-direction: column; padding: 0 16px 16px; min-height: 0; }
+  section { display: none; flex: 1; flex-direction: column; min-height: 0; }
+  section.on { display: flex; }
+  .chant { text-align: center; font-size: clamp(20px, 3.2vw, 34px); font-weight: 700; margin: 6px 0 10px; }
+  .chant span { color: var(--accent); }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .muted { color: var(--muted); }
+
+  /* Little mouse */
+  .houses { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2vmin; align-content: center; min-height: 0; }
+  .house { background: none; border: 0; padding: 0; cursor: pointer; position: relative; aspect-ratio: 1 / 1.05; }
+  .house svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .house .roof { transition: transform .45s cubic-bezier(.3,1.6,.5,1); transform-origin: 50% 40%; }
+  .house.open .roof { transform: translate(-6px, -34px) rotate(-16deg); }
+  .house.empty { opacity: .35; }
+  .house.shake { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .house .mouse { opacity: 0; transition: opacity .3s .2s; }
+  .house.found .mouse { opacity: 1; }
+  .house .label { position: absolute; left: 0; right: 0; bottom: -2px; text-align: center; font-weight: 800; font-size: clamp(14px, 2vw, 22px); display: none; }
+  .words .house .label { display: block; }
+  .msg { text-align: center; font-size: clamp(22px, 3.5vw, 40px); font-weight: 800; min-height: 1.4em; margin-top: 6px; }
+  .msg.ok { color: var(--ok); }
+
+  /* Ring it */
+  .stage { flex: 1; display: grid; grid-template-columns: 1fr auto; gap: 3vmin; align-items: center; min-height: 0; }
+  .card { background: var(--card); border: 3px solid var(--line); border-radius: 28px; height: 100%; max-height: 62vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  .big { font-size: min(30vmin, 260px); font-weight: 900; line-height: 1; }
+  .dots { display: grid; grid-template-columns: repeat(6, 4.2vmin); gap: 1.4vmin; margin-top: 2vmin; }
+  .dots i { width: 4.2vmin; height: 4.2vmin; border-radius: 50%; background: var(--accent); display: block; }
+  .blob { width: min(38vmin, 340px); aspect-ratio: 1; border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%; border: 4px solid rgba(0,0,0,.18); }
+  .word { font-size: clamp(28px, 6vmin, 64px); font-weight: 800; margin-top: 2vmin; visibility: hidden; }
+  .words .word { visibility: visible; }
+  .said { position: absolute; top: 14px; left: 0; right: 0; text-align: center; font-size: clamp(20px, 3vw, 32px); font-weight: 800; }
+  .said.ok { color: var(--ok); } .said.bad { color: var(--bad); }
+  .buzzer { width: min(30vmin, 260px); aspect-ratio: 1; border-radius: 50%; border: 0; cursor: pointer; font-size: min(12vmin, 100px);
+    background: radial-gradient(circle at 35% 30%, #ff8a80, #d32f2f 60%, #8e1b1b); box-shadow: 0 10px 0 #6d1414, 0 14px 24px rgba(0,0,0,.3); color: #fff; }
+  .buzzer:active, .buzzer.hit { transform: translateY(8px); box-shadow: 0 2px 0 #6d1414, 0 4px 10px rgba(0,0,0,.3); }
+  .flash { animation: flash .5s; }
+  @keyframes flash { 0%, 100% { background: var(--card); } 30% { background: #ffe082; } }
+  .note { font-size: 14px; }
+  @media (max-width: 700px) {
+    .houses { grid-template-columns: repeat(3, 1fr); }
+    .stage { grid-template-columns: 1fr; }
+    .buzzer { width: 40vmin; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐭🔔 Colours &amp; Numbers</h1>
+  <button class="tab on" data-tab="mouse">🐭 Little mouse</button>
+  <button class="tab" data-tab="ring">🔔 Ring it!</button>
+  <span class="spacer"></span>
+  <button class="btn" id="words" title="Show written words">Aa</button>
+  <button class="btn" id="sound" title="Sound on/off">🔈</button>
+</header>
+<main>
+  <section id="mouse" class="on">
+    <div class="chant">Little mouse, little mouse, are you in the <span>…</span> house?</div>
+    <div class="houses" id="houses"></div>
+    <div class="msg" id="mmsg"></div>
+    <div class="row"><button class="btn" id="hide">🙈 Hide the mouse</button> <span class="muted" id="tries"></span></div>
+  </section>
+
+  <section id="ring">
+    <div class="row" style="margin:4px 0 10px">
+      <button class="tab on" data-mode="numbers">1 2 3 Numbers</button>
+      <button class="tab" data-mode="colours">🎨 Colours</button>
+      <span class="spacer"></span>
+      <button class="btn" id="say" title="The board says a word – sometimes wrong!">🔊 Say it</button>
+      <button class="btn" id="next">Next ▶</button>
+    </div>
+    <div class="stage">
+      <div class="card" id="card"><div class="said" id="said"></div><div id="face"></div><div class="word" id="word"></div></div>
+      <button class="buzzer" id="buzzer" aria-label="Buzzer">🔔</button>
+    </div>
+    <p class="muted note" style="text-align:center;margin:10px 0 0">Right word? Do nothing. Wrong word? <b>Don't say it – ring it!</b></p>
+  </section>
+</main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const COLOURS = ['red', 'pink', 'blue', 'green', 'yellow', 'orange', 'purple', 'brown', 'black', 'white'];
+  const NUM = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+  const css = (c) => getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim();
+  const rnd = (n) => Math.floor(Math.random() * n);
+
+  // --- Zvuk (Web Audio, bez souborů) a hlas ---
+  let soundOn = true, ctx;
+  function beep(freqs, dur = 0.18, type = 'sine') {
+    if (!soundOn) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      freqs.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.value = f;
+        const t = ctx.currentTime + i * dur;
+        g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur * 1.6);
+        o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur * 1.7);
+      });
+    } catch (e) {}
+  }
+  let voice = null;
+  function pickVoice() {
+    const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    voice = vs.find((v) => v.lang === 'en-GB') || vs.find((v) => /^en/.test(v.lang)) || null;
+  }
+  if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak(text) {
+    if (!window.speechSynthesis) return false;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-GB'; if (voice) u.voice = voice; u.rate = 0.85;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    return true;
+  }
+
+  $('#sound').onclick = () => { soundOn = !soundOn; $('#sound').textContent = soundOn ? '🔈' : '🔇'; };
+  $('#words').onclick = () => document.body.classList.toggle('words');
+  document.querySelectorAll('header .tab').forEach((t) => (t.onclick = () => {
+    document.querySelectorAll('header .tab').forEach((x) => x.classList.toggle('on', x === t));
+    document.querySelectorAll('section').forEach((s) => s.classList.toggle('on', s.id === t.dataset.tab));
+  }));
+
+  // --- Hra 1: Little mouse ---
+  const houseSvg = (c) => `
+    <svg viewBox="0 0 100 105" aria-hidden="true">
+      <rect class="walls" x="18" y="42" width="64" height="56" rx="3" fill="${css(c)}" stroke="#333" stroke-width="2.5"/>
+      <rect x="42" y="68" width="16" height="30" rx="2" fill="rgba(255,255,255,.55)" stroke="#333" stroke-width="2"/>
+      <rect x="25" y="52" width="13" height="12" fill="rgba(255,255,255,.7)" stroke="#333" stroke-width="2"/>
+      <rect x="62" y="52" width="13" height="12" fill="rgba(255,255,255,.7)" stroke="#333" stroke-width="2"/>
+      <g class="mouse" transform="translate(50 30)">
+        <ellipse cx="0" cy="8" rx="15" ry="11" fill="#9e9e9e" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="-10" cy="-4" r="6" fill="#bdbdbd" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="10" cy="-4" r="6" fill="#bdbdbd" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="0" cy="2" r="10" fill="#9e9e9e" stroke="#424242" stroke-width="1.5"/>
+        <circle cx="-4" cy="0" r="1.6" fill="#212121"/><circle cx="4" cy="0" r="1.6" fill="#212121"/>
+        <circle cx="0" cy="5" r="2" fill="#f48fb1"/>
+        <path d="M15 12 q12 4 8 -8" fill="none" stroke="#424242" stroke-width="1.5"/>
+      </g>
+      <g class="roof"><path d="M10 44 L50 10 L90 44 Z" fill="${css(c)}" stroke="#333" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M10 44 L50 10 L90 44" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="6" stroke-linejoin="round"/></g>
+    </svg>`;
+  let secret = -1, tries = 0, done = false;
+  const houses = $('#houses');
+  houses.innerHTML = COLOURS.map((c, i) => `<button class="house" data-i="${i}" aria-label="${c} house">${houseSvg(c)}<span class="label">${c}</span></button>`).join('');
+  function hide() {
+    secret = rnd(COLOURS.length); tries = 0; done = false;
+    houses.querySelectorAll('.house').forEach((h) => (h.className = 'house'));
+    $('#mmsg').textContent = ''; $('#mmsg').className = 'msg';
+    $('#tries').textContent = '';
+    beep([660, 520], 0.12);
+  }
+  houses.addEventListener('click', (e) => {
+    const h = e.target.closest('.house');
+    if (!h || done || h.classList.contains('empty')) return;
+    const i = Number(h.dataset.i), c = COLOURS[i];
+    tries++;
+    h.classList.add('open');
+    if (i === secret) {
+      done = true; h.classList.add('found');
+      $('#mmsg').textContent = `Yes! I'm in the ${c} house! 🐭`; $('#mmsg').className = 'msg ok';
+      beep([523, 659, 784, 1047], 0.12, 'triangle');
+    } else {
+      setTimeout(() => { h.classList.remove('open'); h.classList.add('empty', 'shake'); }, 650);
+      $('#mmsg').textContent = `No, not in the ${c} house.`; $('#mmsg').className = 'msg';
+      beep([300, 220], 0.14, 'square');
+    }
+    $('#tries').textContent = `Tries: ${tries}`;
+  });
+  $('#hide').onclick = hide;
+  hide();
+
+  // --- Hra 2: Ring it! ---
+  let mode = 'numbers', cur = 0, last = -1, said = null;
+  document.querySelectorAll('[data-mode]').forEach((b) => (b.onclick = () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('on', x === b));
+    next();
+  }));
+  const list = () => (mode === 'numbers' ? NUM : COLOURS);
+  function show() {
+    const face = $('#face');
+    if (mode === 'numbers') {
+      face.innerHTML = `<div class="big">${cur + 1}</div><div class="dots">${'<i></i>'.repeat(cur + 1)}</div>`;
+    } else {
+      face.innerHTML = `<div class="blob" style="background:${css(COLOURS[cur])}"></div>`;
+    }
+    $('#word').textContent = list()[cur];
+  }
+  function next() {
+    do { cur = rnd(list().length); } while (cur === last && list().length > 1);
+    last = cur; said = null;
+    $('#said').textContent = ''; $('#said').className = 'said';
+    show();
+  }
+  // Tabule sama řekne slovo: asi v polovině případů špatně.
+  $('#say').onclick = () => {
+    const wrong = Math.random() < 0.5;
+    let k = cur;
+    if (wrong) do { k = rnd(list().length); } while (k === cur);
+    said = { word: list()[k], wrong };
+    if (!speak(said.word)) $('#said').textContent = '🔊 ' + said.word;
+  };
+  function ring() {
+    const b = $('#buzzer'); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 180);
+    beep([880, 1175], 0.16, 'triangle');
+    const card = $('#card'); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+    if (said) {
+      $('#said').textContent = said.wrong ? `✓ Yes! It was "${said.word}". It's ${list()[cur]}!` : `✗ No – "${said.word}" was right!`;
+      $('#said').className = 'said ' + (said.wrong ? 'ok' : 'bad');
+    }
+  }
+  $('#buzzer').onclick = ring;
+  $('#next').onclick = next;
+  document.addEventListener('keydown', (e) => {
+    if (!$('#ring').classList.contains('on')) return;
+    if (e.code === 'Space') { e.preventDefault(); ring(); }
+    if (e.key === 'ArrowRight' || e.key === 'Enter') next();
+    if (e.key.toLowerCase() === 's') $('#say').click();
+  });
+  next();
+})();
+</script>
+</body>
+</html>
