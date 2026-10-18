@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>3roc_outdoors_doplnovacka_2urovne</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #000; background: #ddd; }
+  .page { width: 210mm; min-height: 297mm; padding: 14mm; margin: 10mm auto; background: #fff; page-break-after: always; position: relative; }
+  .page:last-child { page-break-after: auto; }
+  @media print { body { background: #fff; } .page { margin: 0; width: auto; min-height: auto; padding: 0; } }
+  h1 { font-size: 24px; margin: 0 0 2px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 10px; }
+  .name { font-size: 15px; }
+  .level { font-size: 13px; border: 2px solid #000; border-radius: 20px; padding: 2px 12px; font-weight: 700; }
+  .task { margin: 12px 0 6px; font-size: 17px; font-weight: 700; }
+  .task span { display: inline-block; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #000; text-align: center; line-height: 22px; margin-right: 6px; }
+  .scene { width: 100%; height: 66mm; border: 2px solid #000; border-radius: 10px; }
+  .compact .pic svg { width: 40px; height: 40px; }
+  .compact .line { height: 26px; }
+  .compact ol { line-height: 1.75; }
+  .compact .wline { height: 28px; }
+  .compact .box { height: 100px; }
+  .compact .task { margin: 9px 0 4px; }
+  .words { display: flex; gap: 10px; flex-wrap: wrap; border: 2px dashed #000; border-radius: 8px; padding: 6px 10px; font-size: 18px; margin: 6px 0; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 16px; }
+  .pic { display: flex; align-items: center; gap: 8px; font-size: 20px; }
+  .pic svg { width: 54px; height: 54px; flex: none; }
+  .line { flex: 1; border-bottom: 1.5px solid #000; height: 30px; font-size: 20px; padding-left: 4px; }
+  ol { margin: 4px 0; padding-left: 24px; font-size: 19px; line-height: 2.1; }
+  .opt { border: 1.5px solid #000; border-radius: 14px; padding: 0 8px; margin: 0 2px; }
+  .blank { display: inline-block; width: 50px; border-bottom: 1.5px solid #000; }
+  .wline { border-bottom: 1.5px solid #000; height: 34px; }
+  .tf { display: inline-block; width: 90px; margin-left: 8px; font-size: 15px; }
+  .box { border: 2px solid #000; border-radius: 8px; height: 150px; margin-top: 6px; }
+  .note { font-size: 12.5px; line-height: 1.45; }
+  .note h2 { font-size: 17px; margin: 12px 0 4px; }
+  .note table { border-collapse: collapse; width: 100%; }
+  .note td, .note th { border: 1px solid #000; padding: 3px 6px; vertical-align: top; text-align: left; }
+  .star { font-size: 14px; font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- Obrázky (černobílé, k vybarvení) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="tree" viewBox="0 0 60 60"><circle cx="30" cy="22" r="17" fill="#fff" stroke="#000" stroke-width="2.5"/><rect x="26" y="37" width="8" height="18" fill="#fff" stroke="#000" stroke-width="2.5"/></symbol>
+    <symbol id="house" viewBox="0 0 60 60"><path d="M8 28 L30 9 L52 28" fill="none" stroke="#000" stroke-width="2.5"/><rect x="13" y="27" width="34" height="27" fill="#fff" stroke="#000" stroke-width="2.5"/><rect x="26" y="38" width="9" height="16" fill="#fff" stroke="#000" stroke-width="2"/></symbol>
+    <symbol id="flower" viewBox="0 0 60 60"><path d="M30 32 V56" stroke="#000" stroke-width="2.5"/><circle cx="30" cy="12" r="7" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="20" cy="22" r="7" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="40" cy="22" r="7" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="24" cy="33" r="7" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="36" cy="33" r="7" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="30" cy="24" r="6" fill="#fff" stroke="#000" stroke-width="2"/></symbol>
+    <symbol id="bird" viewBox="0 0 60 60"><path d="M6 30 Q18 16 30 30 Q42 16 54 30" fill="none" stroke="#000" stroke-width="3"/></symbol>
+    <symbol id="tent" viewBox="0 0 60 60"><path d="M5 52 L30 10 L55 52 Z" fill="#fff" stroke="#000" stroke-width="2.5"/><path d="M30 10 L22 52 M30 10 L38 52" stroke="#000" stroke-width="2"/></symbol>
+    <symbol id="boat" viewBox="0 0 60 60"><path d="M6 40 H54 L46 52 H14 Z" fill="#fff" stroke="#000" stroke-width="2.5"/><path d="M30 40 V8 L50 34 H30" fill="#fff" stroke="#000" stroke-width="2.5"/></symbol>
+    <symbol id="fish" viewBox="0 0 60 60"><path d="M8 30 Q26 12 44 30 Q26 48 8 30 Z" fill="#fff" stroke="#000" stroke-width="2.5"/><path d="M44 30 L56 20 V40 Z" fill="#fff" stroke="#000" stroke-width="2.5"/><circle cx="18" cy="28" r="2.5"/></symbol>
+    <symbol id="mountain" viewBox="0 0 60 60"><path d="M2 56 L24 12 L36 34 L44 24 L58 56 Z" fill="#fff" stroke="#000" stroke-width="2.5"/></symbol>
+    <symbol id="lake" viewBox="0 0 60 60"><ellipse cx="30" cy="36" rx="27" ry="14" fill="#fff" stroke="#000" stroke-width="2.5"/><path d="M18 36 q6 -4 12 0 M32 40 q6 -4 12 0" stroke="#000" stroke-width="1.5" fill="none"/></symbol>
+    <symbol id="river" viewBox="0 0 60 60"><path d="M0 20 C20 8, 30 36, 60 22 M0 40 C20 28, 30 56, 60 42" fill="none" stroke="#000" stroke-width="2.5"/></symbol>
+  </defs>
+</svg>
+
+<!-- Společný obrázek krajiny -->
+<template id="sceneTpl">
+  <svg class="scene" viewBox="0 0 600 270">
+    <use href="#mountain" x="300" y="10" width="140" height="140"/>
+    <use href="#mountain" x="410" y="30" width="120" height="120"/>
+    <use href="#bird" x="40" y="10" width="50" height="50"/><use href="#bird" x="100" y="30" width="40" height="40"/>
+    <use href="#bird" x="180" y="8" width="44" height="44"/><use href="#bird" x="250" y="34" width="36" height="36"/>
+    <use href="#house" x="30" y="70" width="100" height="100"/>
+    <use href="#tree" x="140" y="60" width="80" height="80"/><use href="#tree" x="200" y="80" width="70" height="70"/><use href="#tree" x="540" y="90" width="60" height="60"/>
+    <use href="#tent" x="260" y="105" width="80" height="80"/>
+    <path d="M0 200 C120 170, 200 240, 340 205 S 520 175, 600 200 L600 245 C480 225, 400 270, 300 248 S 100 225, 0 250 Z" fill="#fff" stroke="#000" stroke-width="2.5"/>
+    <use href="#boat" x="120" y="180" width="60" height="60"/><use href="#boat" x="420" y="178" width="60" height="60"/>
+    <use href="#fish" x="270" y="210" width="40" height="40"/>
+    <use href="#lake" x="440" y="110" width="120" height="100"/>
+    <use href="#flower" x="10" y="160" width="36" height="36"/><use href="#flower" x="45" y="168" width="32" height="32"/>
+    <use href="#flower" x="80" y="160" width="36" height="36"/><use href="#flower" x="350" y="150" width="34" height="34"/><use href="#flower" x="385" y="156" width="30" height="30"/>
+  </svg>
+</template>
+
+<!-- ============ ÚROVEŇ 1 ============ -->
+<section class="page">
+  <div class="head">
+    <div><h1>Outdoors – What can you see?</h1><div class="name">Name: ______________________ &nbsp; Date: __________</div></div>
+    <div class="level">★ Level 1</div>
+  </div>
+  <div class="scene-slot"></div>
+
+  <div class="task"><span>1</span>Look and write.</div>
+  <div class="words">tree · house · tent · boat · fish · bird · flower · lake</div>
+  <div class="grid">
+    <div class="pic"><svg><use href="#tree"/></svg><div class="line">t</div></div>
+    <div class="pic"><svg><use href="#tent"/></svg><div class="line">t</div></div>
+    <div class="pic"><svg><use href="#boat"/></svg><div class="line">b</div></div>
+    <div class="pic"><svg><use href="#fish"/></svg><div class="line">f</div></div>
+    <div class="pic"><svg><use href="#house"/></svg><div class="line">h</div></div>
+    <div class="pic"><svg><use href="#bird"/></svg><div class="line">b</div></div>
+  </div>
+
+  <div class="task"><span>2</span>Look at the big picture. Circle.</div>
+  <ol>
+    <li><span class="opt">There's</span> / <span class="opt">There are</span> a house.</li>
+    <li><span class="opt">There's</span> / <span class="opt">There are</span> two boats.</li>
+    <li><span class="opt">There's</span> / <span class="opt">There are</span> a tent.</li>
+    <li><span class="opt">There's</span> / <span class="opt">There are</span> five flowers.</li>
+  </ol>
+
+  <div class="task"><span>3</span>Count and write the number.</div>
+  <ol>
+    <li>There are <span class="blank"></span> trees.</li>
+    <li>There are <span class="blank"></span> birds.</li>
+    <li>There are <span class="blank"></span> mountains.</li>
+  </ol>
+  <div class="task star">⭐ Finished? Colour the picture: the tent is red, the boats are yellow, the fish is orange.</div>
+</section>
+
+<!-- ============ ÚROVEŇ 2 ============ -->
+<section class="page compact">
+  <div class="head">
+    <div><h1>Outdoors – What can you see?</h1><div class="name">Name: ______________________ &nbsp; Date: __________</div></div>
+    <div class="level">★★ Level 2</div>
+  </div>
+  <div class="scene-slot"></div>
+
+  <div class="task"><span>1</span>How many? Write sentences.</div>
+  <div class="grid" style="grid-template-columns: 1fr">
+    <div class="pic"><svg><use href="#tree"/></svg><div class="line">There are three trees.</div></div>
+    <div class="pic"><svg><use href="#bird"/></svg><div class="line"></div></div>
+    <div class="pic"><svg><use href="#boat"/></svg><div class="line"></div></div>
+    <div class="pic"><svg><use href="#tent"/></svg><div class="line"></div></div>
+    <div class="pic"><svg><use href="#flower"/></svg><div class="line"></div></div>
+  </div>
+
+  <div class="task"><span>2</span>True or False? Write T or F.</div>
+  <ol>
+    <li>There's a lake. <span class="tf">____</span></li>
+    <li>There are four houses. <span class="tf">____</span></li>
+    <li>There's a fish in the river. <span class="tf">____</span></li>
+    <li>There are three mountains. <span class="tf">____</span></li>
+  </ol>
+  <div class="task star">⭐ Make the false sentences true:</div>
+  <div class="wline"></div><div class="wline"></div>
+
+  <div class="task"><span>3</span>My favourite place. Draw and write 2 sentences.</div>
+  <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:12px">
+    <div class="box"></div>
+    <div><div class="wline"></div><div class="wline"></div><div class="wline"></div><div style="font-size:13px;margin-top:4px">There's a … · There are … · I can see …</div></div>
+  </div>
+</section>
+
+<!-- ============ PRO UČITELE ============ -->
+<section class="page note">
+  <div class="head"><div><h1>Pro učitele – metodická poznámka a řešení</h1></div><div class="level">3. ročník · Unit 1</div></div>
+
+  <h2>K čemu</h2>
+  <p>Doplňovačka k Unit 1 Outdoors (Explore Together 1, s. 8–10). Procvičuje <b>psanou podobu slovíček</b> (sada 1 + nová slova tent, boat, fish, river) a <b>ustálená spojení There's a … / There are …</b>. Úroveň 1 = doplňování s nápovědou, úroveň 2 = psaní celých vět.</p>
+
+  <h2>Organizace (cca 10 min, lavice)</h2>
+  <ul>
+    <li>Uveďte společně u tabule: ukažte na obrázek, třída nahlas „There are three trees.“ – teprve pak psaní.</li>
+    <li>Rozdejte úrovně podle dětí: nikomu neříkejte „lehčí / těžší“ – mluvte o „hvězdičkách“ (★ / ★★). Kdo zvládne ★, může dostat ★★.</li>
+    <li>Kázeň: pravidlo „pracuju potichu, hotovo = ruka nahoru, čekám na hvězdičkový úkol“. Povídající dívky posaďte k úkolu odděleně; neklidným chlapcům dejte roli „kontrolor obrázku“ – po dokončení jdou k tabuli ukázat jedno řešení.</li>
+  </ul>
+
+  <h2>Diferenciace</h2>
+  <ul>
+    <li><b>Podpora:</b> úroveň 1, první písmeno je předepsané, slova jsou v rámečku. U úlohy 2 stačí zakroužkovat. Slabším lze úlohu 3 zadat ústně.</li>
+    <li><b>Challenge:</b> úroveň 2 – celé věty, oprava nepravdivých vět, vlastní text „My favourite place“ (navazuje na hodinu 8 lekce). Zdatná dívka („expertka“) může po dokončení kontrolovat ostatním úlohu 1.</li>
+  </ul>
+
+  <h2>Řešení</h2>
+  <table>
+    <tr><th>Obrázek</th><td>2 mountains, 1 house, 3 trees, 4 birds, 1 tent, 1 river, 2 boats, 1 fish, 1 lake, 5 flowers</td></tr>
+    <tr><th>★ 1</th><td>tree, tent, boat, fish, house, bird</td></tr>
+    <tr><th>★ 2</th><td>1 There's · 2 There are · 3 There's · 4 There are</td></tr>
+    <tr><th>★ 3</th><td>3 trees · 4 birds · 2 mountains</td></tr>
+    <tr><th>★★ 1</th><td>There are four birds. · There are two boats. · There's a tent. · There are five flowers.</td></tr>
+    <tr><th>★★ 2</th><td>1 T · 2 F (There's a house.) · 3 T · 4 F (There are two mountains.)</td></tr>
+  </table>
+  <p style="margin-top:8px">Pozor: <b>fish</b> má v množném čísle také <b>fish</b> (two fish) – v listu je proto jen jedna ryba.</p>
+</section>
+
+<script>
+  document.querySelectorAll('.scene-slot').forEach((s) => s.appendChild(document.getElementById('sceneTpl').content.cloneNode(true)));
+</script>
+</body>
+</html>
