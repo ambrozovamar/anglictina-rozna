@@ -214,8 +214,29 @@ table.list th { font-size: .82rem; color: var(--muted); font-weight: 700; }
 .toast-err { background: var(--danger); }
 .toast.out { opacity: 0; }
 
+/* ---------- Tiskový list hodiny (js/views/lessonPrint.js) ---------- */
+.print-sheet { display: none; color: #000; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+.print-sheet.measure { display: block; position: absolute; left: -10000px; top: 0; width: 190mm; }
+.pp { font-size: 9.5pt; line-height: 1.25; }
+.pp + .pp { break-before: page; }
+.pp-head { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1.5pt solid #000; padding-bottom: 2pt; font-size: .9em; }
+.pp h1 { font-size: 1.35em; margin: 4pt 0 3pt; font-family: inherit; }
+.pp h1 span { font-weight: 400; font-size: .8em; }
+.pp-line { margin: 0 0 2pt; }
+.pp-notes { margin-top: 4pt; font-size: .9em; }
+.pp-table { width: 100%; border-collapse: collapse; margin-top: 4pt; table-layout: fixed; }
+.pp-table th { text-align: left; font-size: .8em; border-bottom: 1pt solid #000; padding: 1pt 3pt; }
+.pp-table td { vertical-align: top; border-bottom: .5pt solid #999; padding: 2.5pt 3pt; overflow-wrap: anywhere; }
+.pp-table tr { break-inside: avoid; }
+.pp-time { font-size: .85em; white-space: nowrap; }
+.pp-time span, .pp-res { color: #444; font-size: .9em; }
+
+@page { size: A4; margin: 10mm; }
+
 @media print {
   .side, .no-print, .tpl-list, .act-tools, #toasts { display: none !important; }
+  .print-sheet { display: block; }
+  .print-sheet ~ * { display: none !important; }
   .shell { display: block; }
   .main { padding: 0; max-width: none; }
   .card { box-shadow: none; break-inside: avoid; }

@@ -5,6 +5,7 @@ import { esc, $, $$, fmtDate, lines, unlines, debounce, toast, safeUrl, today } 
 import * as L from '../lessons.js';
 import { vocabSeg, bindVocabSeg, parseVocab } from './grade.js';
 import { slotFor } from '../schedule.js';
+import { preparePrint } from './lessonPrint.js';
 
 export function renderLesson(view, id) {
   let l = structuredClone(store.get('lessons', id));
@@ -59,6 +60,7 @@ export function renderLesson(view, id) {
     : '<div class="small muted">Toto je první hodina v řadě.</div>';
 
   view.innerHTML = `
+    <div class="print-sheet"></div>
     <div class="page-head">
       <div>
         <a href="#/rocnik/${g}" class="small no-print">← ${G.name}</a>
@@ -215,10 +217,11 @@ export function renderLesson(view, id) {
     rerender();
   });
   $('#visible', view).addEventListener('change', (e) => { l.visible = e.target.checked; persist(); });
-  $('#print', view).addEventListener('click', () => {
-    $$('.act details', view).forEach((d) => (d.open = true));
-    window.print();
-  });
+  // Tisk: místo editoru se tiskne kompaktní list (45 min = 1 A4), i při Ctrl+P.
+  window.onbeforeprint = () => {
+    if (location.hash.startsWith('#/hodina/' + id)) preparePrint(view, l);
+  };
+  $('#print', view).addEventListener('click', () => window.print());
   $('#continue', view).addEventListener('click', async () => {
     await persist();
     if (l.status !== 'done' && !l.reflection?.carryOver && !confirm('Reflexe této hodiny ještě není vyplněná. Přesto založit další hodinu?')) return;
