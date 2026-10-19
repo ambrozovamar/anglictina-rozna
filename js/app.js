@@ -4,7 +4,8 @@ import { GRADES, GRADE_IDS, MY_TOOLS } from './curriculum.js';
 import { esc, $, $$, fmtDate, relDay, toast, lines, plural } from './util.js';
 import * as L from './lessons.js';
 import { renderGrade } from './views/grade.js';
-import { renderLesson } from './views/lesson.js';
+import { renderLesson, pending, flushPending } from './views/lesson.js';
+import { summary } from './summary.js';
 import { renderResources } from './views/resources.js';
 import { renderSettings } from './views/settings.js';
 
@@ -157,6 +158,7 @@ function renderDashboard(view) {
 // ---------- Směrování ----------
 
 async function route() {
+  await flushPending(); // rozepsané změny v hodině se uloží před přechodem jinam
   const [path] = location.hash.replace(/^#\/?/, '').split('#');
   const parts = path.split('/').filter(Boolean);
   let active = 'home';
@@ -182,6 +184,7 @@ async function route() {
   app.innerHTML = shell(active);
   $('#logout').addEventListener('click', async (e) => {
     e.preventDefault();
+    await flushPending();
     await store.signOut();
     renderLogin();
   });
@@ -205,7 +208,19 @@ async function start() {
     $('#out').addEventListener('click', async (e) => { e.preventDefault(); await store.signOut(); renderLogin(); });
     return;
   }
-  if (!routing) window.addEventListener('hashchange', route);
+  // Pro Clauda (čte přehled v přihlášeném prohlížeči): window.ajRozna.summary({ grade, last })
+  window.ajRozna = { summary, exportJSON: store.exportJSON, online: store.online };
+  if (!routing) {
+    window.addEventListener('hashchange', route);
+    // Zavírání okna s neuloženými změnami: uložit a prohlížeč se zeptá, jestli odejít.
+    window.addEventListener('beforeunload', (e) => {
+      if (!pending.size) return;
+      flushPending();
+      e.preventDefault();
+      e.returnValue = '';
+    });
+    window.addEventListener('visibilitychange', () => { if (document.hidden) flushPending(); });
+  }
   routing = true;
   route();
   if (store.migrated) toast(`Data z tohoto prohlížeče (${store.migrated} záznamů) jsou přenesená do databáze.`);

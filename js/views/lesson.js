@@ -1,11 +1,17 @@
 // Příprava jedné hodiny: základ, cíle, průběh (aktivity), slovní zásoba, reflexe.
 import * as store from '../store.js';
 import { GRADES, FORMS, ACTIVITY_TEMPLATES } from '../curriculum.js';
-import { esc, $, $$, fmtDate, lines, unlines, debounce, toast, safeUrl, today } from '../util.js';
+import { esc, $, $$, fmtDate, lines, unlines, toast, safeUrl, today } from '../util.js';
 import * as L from '../lessons.js';
 import { vocabSeg, bindVocabSeg, parseVocab } from './grade.js';
 import { slotFor } from '../schedule.js';
 import { preparePrint } from './lessonPrint.js';
+
+// Neuložené změny (id hodiny → funkce, která je uloží). Router je před odchodem uloží, okno se při zavírání zeptá.
+export const pending = new Map();
+export async function flushPending() {
+  for (const fn of [...pending.values()]) await fn();
+}
 
 export function renderLesson(view, id) {
   let l = structuredClone(store.get('lessons', id));
@@ -13,16 +19,37 @@ export function renderLesson(view, id) {
   const G = GRADES[g];
   view.classList.add('g' + g);
 
-  const persist = async () => {
-    try {
-      await store.save('lessons', l);
-      const s = $('#saved', view);
-      if (s) s.textContent = 'Uloženo ' + new Date().toLocaleTimeString('cs', { hour: '2-digit', minute: '2-digit' });
-    } catch (err) {
-      toast(err.message, 'err');
+  // Ukládání: automaticky chvíli po psaní + tlačítko Uložit. Stav je vidět vedle data hodiny.
+  let timer = null;
+  const setState = (text, cls = '') => {
+    const s = $('#saved', view);
+    if (s) {
+      s.textContent = text;
+      s.className = 'saved ' + cls;
     }
   };
-  const saveSoon = debounce(persist, 500);
+  const persist = async () => {
+    clearTimeout(timer);
+    timer = null;
+    setState('Ukládám…');
+    try {
+      await store.save('lessons', l);
+      pending.delete(id);
+      setState('✓ Uloženo ' + new Date().toLocaleTimeString('cs', { hour: '2-digit', minute: '2-digit' }), 'ok');
+      return true;
+    } catch (err) {
+      setState('⚠ Neuloženo – klikněte na Uložit', 'err');
+      toast(err.message, 'err');
+      return false;
+    }
+  };
+  const saveSoon = () => {
+    pending.set(id, persist);
+    setState('Neuloženo…', 'dirty');
+    clearTimeout(timer);
+    timer = setTimeout(persist, 1500);
+  };
+  const where = store.online ? 'do databáze' : 'v tomto prohlížeči';
   const rerender = async () => {
     await persist();
     const y = window.scrollY;
@@ -65,10 +92,11 @@ export function renderLesson(view, id) {
       <div>
         <a href="#/rocnik/${g}" class="small no-print">← ${G.name}</a>
         <h1 style="margin-top:4px">${fmtDate(l.date, { long: true })} <span class="gtag">${G.name}</span></h1>
-        <p class="muted">${esc(l.period)} · ${l.minutes} min · ${esc(l.equipment)} · <span id="saved" class="saved">Ukládá se automaticky</span></p>
+        <p class="muted">${esc(l.period)} · ${l.minutes} min · ${esc(l.equipment)} · <span id="saved" class="saved">✓ Uloženo</span></p>
       </div>
       <div class="row no-print">
         ${l.status === 'done' ? '<span class="badge done">✓ odučeno</span>' : ''}
+        <button class="btn" data-save>💾 Uložit</button>
         <button class="btn" id="print">🖨 Tisk</button>
         <button class="btn primary" id="continue">Navázat další hodinou →</button>
       </div>
@@ -116,6 +144,10 @@ export function renderLesson(view, id) {
           <label class="field"><span>🙋 Děti, chování, diferenciace</span><textarea data-k="reflection.behaviour" placeholder="Kdo potřebuje víc podpory, kdo byl napřed, co pomohlo s kázní…">${esc(l.reflection?.behaviour)}</textarea></label>
           ${lessonVocab.length ? `<div><b class="small">Jak umí slovíčka z hodiny</b>
             <div class="stack" style="margin-top:8px">${lessonVocab.map((v) => `<div class="row between"><span><b>${esc(v.term)}</b> <span class="muted small">${esc(v.cz)}</span></span>${vocabSeg(v)}</div>`).join('')}</div></div>` : ''}
+          <div class="row no-print" style="justify-content:flex-end">
+            <span class="small muted">Ukládá se i samo při psaní.</span>
+            <button class="btn primary" id="saveReflection">💾 Uložit reflexi</button>
+          </div>
         </section>
       </div>
 
@@ -211,6 +243,26 @@ export function renderLesson(view, id) {
   bindVocabSeg($('#reflexe', view), rerender);
 
   // --- Ostatní ---
+  $$('[data-save]', view).forEach((b) =>
+    b.addEventListener('click', async () => {
+      if (await persist()) toast('Uloženo ' + where + ' ✓');
+    })
+  );
+  // Uložení reflexe: odučenou hodinu (dnes nebo dříve) rovnou označí jako odučenou.
+  $('#saveReflection', view).addEventListener('click', async () => {
+    const r = l.reflection || {};
+    const filled = r.learned || r.notLearned || r.carryOver || r.behaviour;
+    const mark = filled && l.status !== 'done' && l.date <= today();
+    if (mark) l.status = 'done';
+    if (!(await persist())) return;
+    toast(mark ? 'Reflexe uložena ' + where + ', hodina označena jako odučená ✓' : 'Reflexe uložena ' + where + ' ✓');
+    if (mark) {
+      const y = window.scrollY;
+      renderLesson(view, id);
+      window.scrollTo(0, y);
+    }
+  });
+
   $('#done', view).addEventListener('change', (e) => {
     l.status = e.target.checked ? 'done' : 'planned';
     if (e.target.checked && l.date > today()) toast('Pozor: hodina je v budoucnosti.');

@@ -2,6 +2,7 @@
 import * as store from '../store.js';
 import { GRADES, GRADE_IDS } from '../curriculum.js';
 import { esc, $, toast, today } from '../util.js';
+import { summary, downloadSummary } from '../summary.js';
 
 export function renderSettings(view) {
   const n = (t) => store.all(t).length;
@@ -21,6 +22,15 @@ export function renderSettings(view) {
         <h2>Připravené hodiny od Clauda</h2>
         <p class="small muted">Připravené hodiny jsou na webu zašifrované. Zadejte jednou heslo webu (Dokumenty\\Anglictina\\heslo-webu.txt) – uloží se k vašemu účtu a hodiny se budou načítat na každém zařízení.</p>
         <form id="unlock" class="row"><input type="password" name="pw" placeholder="Heslo webu" autocomplete="off" style="flex:1"><button class="btn primary">Odemknout</button></form>
+      </section>
+      <section class="card stack">
+        <h2>Přehled pro Clauda</h2>
+        <p class="small muted">Všechny hodiny, reflexe (co děti zvládly a co ne) a stav slovíček po ročnících v jednom textu.
+          Claude ho čte z databáze při přípravě dalších hodin. Můžete si ho i stáhnout nebo zkopírovat.</p>
+        <div class="row">
+          <button class="btn" id="sumDl">📋 Stáhnout přehled</button>
+          <button class="btn" id="sumCopy">Kopírovat do schránky</button>
+        </div>
       </section>
       <section class="card stack">
         <h2>Záloha</h2>
@@ -46,6 +56,16 @@ export function renderSettings(view) {
       renderSettings(view);
     } catch (err) {
       toast(err.message, 'err');
+    }
+  });
+
+  $('#sumDl', view).addEventListener('click', downloadSummary);
+  $('#sumCopy', view).addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(summary());
+      toast('Přehled zkopírován.');
+    } catch {
+      toast('Kopírování se nepovedlo – použijte Stáhnout.', 'err');
     }
   });
 

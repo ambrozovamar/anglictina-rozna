@@ -186,7 +186,10 @@ input[type=checkbox] { width: auto; }
 .seg button.on.v-plain { background: var(--accent); color: #fff; }
 
 .reflect { border: 2px solid var(--g3); }
-.saved { font-size: .82rem; color: var(--muted); }
+.saved { font-size: .82rem; color: var(--muted); font-weight: 700; }
+.saved.ok { color: #2f8f4e; }
+.saved.dirty { color: #c77700; }
+.saved.err { color: var(--danger); }
 
 table.list { width: 100%; border-collapse: collapse; }
 table.list th, table.list td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
