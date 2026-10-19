@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>There's or There are</title>
+<!--
+  Metodická poznámka (pro učitele)
+  3. ročník · Unit 1 Outdoors · samostatná práce na počítačích (10–13 min), funguje offline, myší i dotykem.
+  Navazuje na reflexi 19. 10.: ústně there is / there are zvládají, písemně asi polovina chybuje → každý trénuje svým tempem,
+  počítač hned řekne, jestli je to správně, a ukáže nápovědu. Učitel mezitím obchází děti, které potřebují pomoc.
+  ★ Úroveň 1 (základ): podívej se na obrázek → vyber There's a / There are → vyber slovo (tree / trees).
+  ★★ Úroveň 2 (challenge): napiš celou větu sám (slova jsou v nápovědě), i s počtem: There are three boats.
+  🤝 Podpora: tlačítko 💡 ukáže pravidlo (1 věc = There's a …, víc věcí = There are … + s; fish zůstává fish).
+  Na konci se ukáže počet hvězdiček – dítě zvedne ruku a ukáže učiteli. Slova: tree, flower, bird, house, mountain,
+  lake, tent, river, fish, boat, kite. Pokyny pro děti anglicky, britská angličtina, bez chráněných postav.
+-->
+<style>
+  :root { --bg: #f2f8ee; --ink: #1f2a1a; --card: #fff; --line: #d5e2cc; --accent: #2f8f4e; --bad: #c0392b; --one: #1e6fd9; --many: #8e24aa; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151a13; --ink: #eef3ea; --card: #222a1f; --line: #3a4636; } }
+  :root[data-theme="dark"] { --bg: #151a13; --ink: #eef3ea; --card: #222a1f; --line: #3a4636; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 10px; padding: clamp(6px, 1.4vh, 12px) 16px; flex-wrap: wrap; }
+  header h1 { font-size: clamp(18px, min(2.4vw, 4vh), 26px); margin: 0 auto 0 0; }
+  .btn { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: clamp(6px, 1.2vh, 10px) 16px; font: inherit; font-weight: 700; cursor: pointer; min-height: 44px; }
+  .btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .stars { font-size: clamp(18px, min(2.4vw, 4vh), 26px); font-weight: 800; white-space: nowrap; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 16px); padding: 0 16px 16px; min-height: 0; }
+  .scene { width: min(900px, 100%); flex: 1 1 auto; min-height: 0; max-height: 38vh; background: var(--card); border-radius: 22px; border: 2px solid var(--line);
+    display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: min(2vw, 2.5vh); padding: min(2vw, 2.5vh); overflow: hidden; }
+  .item { --s: clamp(44px, min(10vw, 16vh), 130px); width: var(--s); height: var(--s); font-size: calc(var(--s) * .85); line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .item svg { width: 100%; height: 100%; }
+  .sentence { font-size: clamp(22px, min(4vw, 6.5vh), 48px); font-weight: 800; text-align: center; min-height: 1.3em; }
+  .slot { display: inline-block; min-width: 3.5em; border-bottom: 5px solid currentColor; padding: 0 .2em; }
+  .slot.one { color: var(--one); } .slot.many { color: var(--many); }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .choice { font: inherit; font-size: clamp(20px, min(3vw, 5vh), 36px); font-weight: 800; padding: clamp(8px, 1.6vh, 14px) clamp(16px, 2.4vw, 32px); border-radius: 16px; border: 3px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .choice:hover { border-color: var(--accent); }
+  .choice.ok { background: #d3f9d8; border-color: var(--accent); color: #1b5e20; }
+  .choice.no { background: #ffe3e3; border-color: var(--bad); color: var(--bad); }
+  .type { display: flex; gap: 10px; width: min(900px, 100%); }
+  .type input { flex: 1; min-width: 0; font: inherit; font-size: clamp(20px, min(3vw, 5vh), 34px); padding: 10px 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--card); color: var(--ink); }
+  .bank { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; font-size: clamp(15px, min(1.8vw, 3vh), 20px); }
+  .bank span { background: var(--card); border: 2px dashed var(--line); border-radius: 10px; padding: 4px 10px; }
+  .msg { font-size: clamp(18px, min(2.6vw, 4.2vh), 30px); font-weight: 800; min-height: 1.3em; text-align: center; }
+  .msg.ok { color: var(--accent); } .msg.no { color: var(--bad); }
+  .hint { width: min(900px, 100%); background: #fff8e1; color: #5d4300; border-radius: 14px; padding: 10px 14px; font-size: clamp(15px, min(1.8vw, 3vh), 20px); display: none; }
+  .hint.show { display: block; }
+  .hint b.one { color: var(--one); } .hint b.many { color: var(--many); }
+  .end { text-align: center; font-size: clamp(22px, min(3.5vw, 6vh), 40px); font-weight: 800; }
+  @media (max-width: 600px) { body { height: auto; min-height: 100%; } .scene { flex: none; min-height: 150px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌳 There's or There are?</h1>
+  <button class="btn on" data-level="1">★ Level 1</button>
+  <button class="btn" data-level="2">★★ Level 2</button>
+  <button class="btn" id="hintBtn">💡 Help</button>
+  <span class="stars" id="stars">⭐ 0 / 10</span>
+</header>
+<main id="main"></main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const SVG = {
+    lake: '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="44" ry="24" fill="#4dabf7"/><ellipse cx="50" cy="58" rx="30" ry="12" fill="#a5d8ff"/></svg>',
+    river: '<svg viewBox="0 0 100 100"><path d="M-5 30 C 25 10, 45 50, 70 30 S 105 20, 105 20 L 105 50 C 80 55, 70 75, 45 60 S 10 55, -5 70 Z" fill="#4dabf7"/></svg>',
+    mountain: '<svg viewBox="0 0 100 100"><path d="M5 90 L40 20 L58 52 L70 36 L95 90 Z" fill="#868e96"/><path d="M40 20 L30 40 L40 36 L48 42 Z" fill="#fff"/></svg>',
+  };
+  // countable: lze počítat; plural = tvar množného čísla
+  const WORDS = {
+    tree: { icon: '🌳', plural: 'trees' }, flower: { icon: '🌼', plural: 'flowers' }, bird: { icon: '🐦', plural: 'birds' },
+    house: { icon: '🏠', plural: 'houses' }, mountain: { svg: 'mountain', plural: 'mountains' }, tent: { icon: '⛺', plural: 'tents' },
+    boat: { icon: '⛵', plural: 'boats' }, fish: { icon: '🐟', plural: 'fish' }, kite: { icon: '🪁', plural: 'kites' },
+    lake: { svg: 'lake', plural: 'lakes', only1: true }, river: { svg: 'river', plural: 'rivers', only1: true },
+  };
+  const NUM = ['', 'one', 'two', 'three', 'four', 'five'];
+  const KEYS = Object.keys(WORDS);
+  const art = (k) => (WORDS[k].svg ? SVG[WORDS[k].svg] : WORDS[k].icon);
+  const rnd = (n) => Math.floor(Math.random() * n);
+  const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+  const sentence = (k, n) => (n === 1 ? `There's a ${k}.` : `There are ${NUM[n]} ${WORDS[k].plural}.`);
+  const ROUNDS = 10;
+
+  let level = 1, round = 0, stars = 0, task = null, firstTry = true;
+
+  // Úlohy: střídá 1 a víc věcí, aby děti musely přemýšlet (ne jen opakovat stejnou odpověď).
+  function makeTasks() {
+    const out = [];
+    const keys = shuffle(KEYS);
+    for (let i = 0; i < ROUNDS; i++) {
+      const k = keys[i % keys.length];
+      const n = WORDS[k].only1 ? 1 : (i % 2 === 0 ? 1 : 2 + rnd(4));
+      out.push({ k, n });
+    }
+    return shuffle(out);
+  }
+  let tasks = makeTasks();
+
+  const updateStars = () => ($('#stars').textContent = `⭐ ${stars} / ${ROUNDS}`);
+  const scene = (t) => `<div class="scene">${Array.from({ length: t.n }, () => `<div class="item">${art(t.k)}</div>`).join('')}</div>`;
+  const hintHtml = `<div class="hint" id="hint">
+      <b class="one">1 thing</b> → <b class="one">There's a</b> tree. &nbsp;·&nbsp;
+      <b class="many">2, 3, 4 … things</b> → <b class="many">There are</b> two tree<b class="many">s</b>.
+      &nbsp;·&nbsp; 🐟 <b>fish</b> → one fish, two <b>fish</b> (no s!)</div>`;
+
+  function next() {
+    if (round >= ROUNDS) return finish();
+    task = tasks[round];
+    firstTry = true;
+    (level === 1 ? renderL1 : renderL2)();
+  }
+
+  // ★ Level 1: dvě volby
+  function renderL1() {
+    const t = task;
+    $('#main').innerHTML = `${scene(t)}
+      <div class="sentence"><span class="slot" id="s1">&nbsp;</span> <span class="slot" id="s2">&nbsp;</span>.</div>
+      <div class="choices" id="c1"><button class="choice" data-a="1">There's a</button><button class="choice" data-a="2">There are</button></div>
+      <div class="msg" id="msg">Look and choose!</div>${hintHtml}`;
+    $('#c1').addEventListener('click', (e) => {
+      const b = e.target.closest('.choice');
+      if (!b) return;
+      const ok = (b.dataset.a === '1') === (t.n === 1);
+      if (!ok) return wrong(b, t.n === 1 ? 'Look again – how many? 1 → There\'s a …' : 'Look again – how many? More than 1 → There are …');
+      b.classList.add('ok');
+      const s1 = $('#s1');
+      s1.textContent = t.n === 1 ? "There's a" : `There are ${NUM[t.n]}`;
+      s1.className = 'slot ' + (t.n === 1 ? 'one' : 'many');
+      const opts = shuffle([t.k, WORDS[t.k].plural === t.k ? t.k + 's' : WORDS[t.k].plural]);
+      $('#c1').outerHTML = `<div class="choices" id="c2">${opts.map((w) => `<button class="choice" data-w="${w}">${w}</button>`).join('')}</div>`;
+      $('#msg').textContent = 'Now choose the word!';
+      $('#msg').className = 'msg';
+      $('#c2').addEventListener('click', (e2) => {
+        const b2 = e2.target.closest('.choice');
+        if (!b2) return;
+        const want = t.n === 1 ? t.k : WORDS[t.k].plural;
+        if (b2.dataset.w !== want) return wrong(b2, t.k === 'fish' ? 'Fish has no s: two fish!' : (t.n === 1 ? 'One thing – no s.' : 'More things – add s!'));
+        b2.classList.add('ok');
+        $('#s2').textContent = want;
+        right();
+      });
+    });
+  }
+
+  // ★★ Level 2: napsat celou větu
+  function renderL2() {
+    const t = task;
+    $('#main').innerHTML = `${scene(t)}
+      <form class="type" id="f"><input id="in" autocomplete="off" spellcheck="false" placeholder="Write: There's a … / There are …"><button class="btn on">Check ✓</button></form>
+      <div class="bank"><span>There's a</span><span>There are</span>${NUM.slice(2).map((w) => `<span>${w}</span>`).join('')}<span>${t.k}</span><span>${WORDS[t.k].plural}</span></div>
+      <div class="msg" id="msg">Look, count and write the sentence.</div>${hintHtml}`;
+    const inp = $('#in');
+    inp.focus();
+    $('#f').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const norm = (s) => s.toLowerCase().replace(/[’`´]/g, "'").replace(/there is a/g, "there's a").replace(/[.!]/g, '').replace(/\s+/g, ' ').trim();
+      const want = sentence(t.k, t.n);
+      const alt = t.n > 1 ? `There are ${t.n} ${WORDS[t.k].plural}.` : want; // i číslice je OK
+      if (norm(inp.value) === norm(want) || norm(inp.value) === norm(alt)) {
+        inp.value = want;
+        inp.style.borderColor = 'var(--accent)';
+        return right();
+      }
+      const v = norm(inp.value);
+      let tip = 'Not yet – try again!';
+      if (t.n === 1 && v.startsWith('there are')) tip = "Only 1 thing → There's a …";
+      else if (t.n > 1 && v.startsWith("there's")) tip = 'More things → There are …';
+      else if (t.n > 1 && t.k !== 'fish' && !v.endsWith(WORDS[t.k].plural)) tip = 'More things → add s!';
+      else if (t.k === 'fish' && v.endsWith('fishs')) tip = 'Fish has no s: two fish!';
+      firstTry = false;
+      $('#msg').textContent = tip;
+      $('#msg').className = 'msg no';
+      inp.style.borderColor = 'var(--bad)';
+    });
+  }
+
+  function wrong(btn, tip) {
+    firstTry = false;
+    btn.classList.add('no');
+    setTimeout(() => btn.classList.remove('no'), 700);
+    $('#msg').textContent = tip;
+    $('#msg').className = 'msg no';
+  }
+  function right() {
+    if (firstTry) stars++;
+    updateStars();
+    $('#msg').textContent = (firstTry ? '⭐ ' : '✓ ') + sentence(task.k, task.n) + ' Read it aloud!';
+    $('#msg').className = 'msg ok';
+    round++;
+    setTimeout(next, 1700);
+  }
+  function finish() {
+    $('#main').innerHTML = `<div class="end">🎉 Well done!<br>⭐ ${stars} / ${ROUNDS}<br><span style="font-size:.6em">Put your hand up and show your teacher.</span></div>
+      <div class="choices"><button class="choice" id="again">🔁 Play again</button>${level === 1 ? '<button class="choice" id="up">★★ Try Level 2</button>' : ''}</div>`;
+    $('#again').onclick = () => start(level);
+    $('#up')?.addEventListener('click', () => start(2));
+  }
+  function start(l) {
+    level = l; round = 0; stars = 0; tasks = makeTasks();
+    document.querySelectorAll('[data-level]').forEach((b) => b.classList.toggle('on', Number(b.dataset.level) === l));
+    updateStars();
+    next();
+  }
+  document.querySelectorAll('[data-level]').forEach((b) => (b.onclick = () => start(Number(b.dataset.level))));
+  $('#hintBtn').onclick = () => $('#hint')?.classList.toggle('show');
+  start(1);
+})();
+</script>
+</body>
+</html>
