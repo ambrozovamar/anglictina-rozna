@@ -253,9 +253,6 @@ async function importPrepared() {
     done = new Set(profile.preparedDone || []);
   }
   const before = done.size;
-  const topicId = (grade, title) => cache.topics.find((t) => t.grade === grade && t.title === title)?.id || '';
-  const vocabKey = (grade, term) => `${grade}|${term.trim().toLowerCase()}`;
-
   for (const f of files) {
     let data;
     try {
@@ -266,56 +263,114 @@ async function importPrepared() {
     } catch {
       continue;
     }
-    // Novější verze (rev) přepíše dřívější import, jen pokud ho učitelka mezitím neupravila
-    // (updated_at se nezměnil od importu).
-    const pending = (data.lessons || []).filter((l) => {
-      const ex = cache.lessons.find((x) => x.id === l.id);
-      if (ex) return (l.rev || 1) > (ex.preparedRev || 1) && ex.updated_at === ex.importedAt;
-      return !done.has(l.id) && !cache.lessons.some((x) => x.grade === l.grade && x.date === l.date);
-    });
-    if (!pending.length) {
-      (data.lessons || []).forEach((l) => done.add(l.id));
-      continue;
-    }
-
-    // Slovíčka
-    const have = new Map(cache.vocab.map((v) => [vocabKey(v.grade, v.term), v.id]));
-    const newVocab = [];
-    for (const v of data.vocab || []) {
-      const k = vocabKey(v.grade, v.term);
-      if (have.has(k)) continue;
-      const { topicTitle, ...rest } = v;
-      const o = { id: uid(), kind: v.term.trim().includes(' ') ? 'chunk' : 'word', ...rest, topicId: topicId(v.grade, topicTitle) };
-      newVocab.push(o);
-      have.set(k, o.id);
-    }
-    await saveMany('vocab', newVocab);
-
-    // Hodiny
-    const now = new Date().toISOString();
-    const lessons = pending.map((l) => {
-      const { topicTitle, vocabTerms, rev, ...rest } = l;
-      const slot = slotFor(l.grade, l.date) || {};
-      return {
-        preparedRev: rev || 1,
-        importedAt: now,
-        updated_at: now,
-        period: slot.period || '',
-        minutes: slot.minutes || 45,
-        equipment: slot.equipment || '',
-        ...rest,
-        topicId: topicId(l.grade, topicTitle),
-        vocabIds: (vocabTerms || []).map((t) => have.get(vocabKey(l.grade, t))).filter(Boolean),
-        activities: (l.activities || []).map((a) => ({ id: uid(), ...a })),
-      };
-    });
-    await saveMany('lessons', lessons);
-    (data.lessons || []).forEach((l) => done.add(l.id));
+    await applyPrepared(data, done);
   }
   try {
     localStorage.setItem(LS_PREPARED, JSON.stringify([...done]));
   } catch {}
   if (online && done.size !== before) await saveProfile({ preparedDone: [...done] });
+}
+
+// Uloží připravené hodiny a slovíčka ({ vocab: [...], lessons: [...] }) – ze souboru nebo přímo od Clauda.
+// Existující hodinu přepíše jen novější verze (rev) a jen tehdy, když ji učitelka od importu neupravila
+// (updated_at === importedAt). Vrací počet uložených hodin.
+export async function applyPrepared(data, done = new Set()) {
+  const topicId = (grade, title) => cache.topics.find((t) => t.grade === grade && t.title === title)?.id || '';
+  const vocabKey = (grade, term) => `${grade}|${term.trim().toLowerCase()}`;
+  const pending = (data.lessons || []).filter((l) => {
+    const ex = cache.lessons.find((x) => x.id === l.id);
+    if (ex) return (l.rev || 1) > (ex.preparedRev ?? 1) && ex.updated_at === ex.importedAt;
+    return !done.has(l.id) && !cache.lessons.some((x) => x.grade === l.grade && x.date === l.date);
+  });
+  (data.lessons || []).forEach((l) => done.add(l.id));
+  if (!pending.length) return 0;
+
+  // Slovíčka
+  const have = new Map(cache.vocab.map((v) => [vocabKey(v.grade, v.term), v.id]));
+  const newVocab = [];
+  for (const v of data.vocab || []) {
+    const k = vocabKey(v.grade, v.term);
+    if (have.has(k)) continue;
+    const { topicTitle, ...rest } = v;
+    const o = { id: uid(), kind: v.term.trim().includes(' ') ? 'chunk' : 'word', ...rest, topicId: topicId(v.grade, topicTitle) };
+    newVocab.push(o);
+    have.set(k, o.id);
+  }
+  await saveMany('vocab', newVocab);
+
+  // Hodiny
+  const now = new Date().toISOString();
+  const lessons = pending.map((l) => {
+    const { topicTitle, vocabTerms, rev, ...rest } = l;
+    const slot = slotFor(l.grade, l.date) || {};
+    return {
+      preparedRev: rev || 1,
+      importedAt: now,
+      updated_at: now,
+      period: slot.period || '',
+      minutes: slot.minutes || 45,
+      equipment: slot.equipment || '',
+      ...rest,
+      awaitingClaude: false,
+      topicId: topicId(l.grade, topicTitle),
+      vocabIds: (vocabTerms || []).map((t) => have.get(vocabKey(l.grade, t))).filter(Boolean),
+      activities: (l.activities || []).map((a) => ({ id: uid(), ...a })),
+    };
+  });
+  await saveMany('lessons', lessons);
+  for (const l of lessons) await closeRequest(l.id);
+  return lessons.length;
+}
+
+// ---------- Požadavky na přípravu (tlačítko „Navázat další hodinou“) ----------
+// Firestore `requests/{lessonId}`: { owner, lessonId, grade, date, prevId, status: 'open'|'done', created, done }
+
+const LS_REQ = 'aj-rozna-requests';
+const readReqs = () => {
+  try {
+    return JSON.parse(localStorage.getItem(LS_REQ) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+export async function addRequest(req) {
+  if (!online) {
+    const all = readReqs();
+    all[req.lessonId] = req;
+    localStorage.setItem(LS_REQ, JSON.stringify(all));
+    return;
+  }
+  const { fs, db } = await firebase();
+  try {
+    await fs.setDoc(fs.doc(db, 'requests', req.lessonId), { ...req, owner: user.uid });
+  } catch (e) {
+    console.warn('Požadavek pro Clauda se neuložil:', fbError(e).message);
+  }
+}
+
+export async function listRequests(status = 'open') {
+  if (!online) return Object.values(readReqs()).filter((r) => !status || r.status === status);
+  const { fs, db } = await firebase();
+  const snap = await fs.getDocs(fs.query(fs.collection(db, 'requests'), fs.where('owner', '==', user.uid)));
+  return snap.docs.map((d) => d.data()).filter((r) => !status || r.status === status);
+}
+
+export async function closeRequest(lessonId) {
+  const patch = { status: 'done', done: new Date().toISOString() };
+  if (!online) {
+    const all = readReqs();
+    if (all[lessonId]) {
+      Object.assign(all[lessonId], patch);
+      localStorage.setItem(LS_REQ, JSON.stringify(all));
+    }
+    return;
+  }
+  const { fs, db } = await firebase();
+  try {
+    const ref = fs.doc(db, 'requests', lessonId);
+    if ((await fs.getDoc(ref)).exists()) await fs.setDoc(ref, patch, { merge: true });
+  } catch {}
 }
 
 // První spuštění: založí témata z tematických plánů a základní externí nástroje.

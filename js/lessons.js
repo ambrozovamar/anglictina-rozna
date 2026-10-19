@@ -91,9 +91,42 @@ export async function createLesson(grade, date) {
 }
 
 // Navazující hodina po dané hodině (nejbližší další termín v rozvrhu).
+// Založí koncept z reflexe a pošle Claudovi požadavek (Firestore `requests`), aby hodinu plně připravil
+// podle reflexe a všech materiálů. Koncept je „neupravený“ (updated_at = importedAt) – dokud ho učitelka
+// nezmění, Claudova příprava ho nahradí; když ho upraví, nic se nepřepíše.
 export async function continueLesson(lesson) {
   const next = nextSlotAfter(lesson.grade, lesson.date);
-  return createLesson(lesson.grade, next.date);
+  let n = lessonOn(lesson.grade, next.date);
+  if (!n) {
+    const draft = await createLesson(lesson.grade, next.date);
+    const r = lesson.reflection || {};
+    const now = new Date().toISOString();
+    n = {
+      ...draft,
+      prevId: lesson.id,
+      title: '⏳ Čeká na přípravu od Clauda',
+      notes: [
+        r.learned && `Minule zvládli: ${r.learned}`,
+        r.notLearned && `Minule nezvládli / nestihli: ${r.notLearned}`,
+        r.behaviour && `Děti, chování: ${r.behaviour}`,
+      ].filter(Boolean).join('\n'),
+      awaitingClaude: true,
+      preparedRev: 0,
+      importedAt: now,
+      updated_at: now,
+    };
+    await store.saveMany('lessons', [n]);
+  }
+  if (!n.awaitingClaude) return n; // hodina už je připravená
+  await store.addRequest({
+    lessonId: n.id,
+    grade: lesson.grade,
+    date: next.date,
+    prevId: lesson.id,
+    status: 'open',
+    created: new Date().toISOString(),
+  });
+  return n;
 }
 
 export const nextSlots = (grade, count = 2) => upcomingSlots(grade, today(), count);

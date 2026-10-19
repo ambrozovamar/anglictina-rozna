@@ -36,6 +36,15 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Požadavky na přípravu hodiny pro Clauda (tlačítko „Navázat další hodinou“) – jen učitelka, jen svoje.
+    match /requests/{id} {
+      allow read: if isTeacher() && resource.data.owner == request.auth.uid;
+      allow create: if isTeacher() && request.resource.data.owner == request.auth.uid;
+      allow update: if isTeacher() && resource.data.owner == request.auth.uid
+        && request.resource.data.owner == request.auth.uid;
+      allow delete: if isTeacher() && resource.data.owner == request.auth.uid;
+    }
+
     // Data aplikace.
     match /{col}/{id} {
       function isDataCol() { return col in ['lessons', 'vocab', 'resources', 'topics']; }

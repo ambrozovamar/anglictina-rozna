@@ -209,7 +209,13 @@ async function start() {
     return;
   }
   // Pro Clauda (čte přehled v přihlášeném prohlížeči): window.ajRozna.summary({ grade, last })
-  window.ajRozna = { summary, exportJSON: store.exportJSON, online: store.online };
+  window.ajRozna = {
+    summary,
+    exportJSON: store.exportJSON,
+    online: store.online,
+    requests: store.listRequests, // otevřené požadavky z tlačítka Navázat
+    applyPrepared: async (data) => { const n = await store.applyPrepared(data); route(); return n; },
+  };
   if (!routing) {
     window.addEventListener('hashchange', route);
     // Zavírání okna s neuloženými změnami: uložit a prohlížeč se zeptá, jestli odejít.

@@ -102,6 +102,10 @@ export function renderLesson(view, id) {
       </div>
     </div>
 
+    ${l.awaitingClaude ? `<div class="card no-print" style="border-left:5px solid #c77700;margin-bottom:12px">
+      <b>⏳ Čeká na přípravu od Clauda.</b> Koncept vznikl z reflexe minulé hodiny (cíle = co přenést, opakování = co nešlo).
+      Claude hodinu připraví podle reflexe a všech materiálů. <span class="muted">Když ji začnete upravovat sama, Claude ji nepřepíše.</span>
+    </div>` : ''}
     <div class="lesson-grid">
       <div class="stack">
         <section class="card stack">
@@ -278,7 +282,9 @@ export function renderLesson(view, id) {
     await persist();
     if (l.status !== 'done' && !l.reflection?.carryOver && !confirm('Reflexe této hodiny ještě není vyplněná. Přesto založit další hodinu?')) return;
     const n = await L.continueLesson(l);
-    toast(`Další hodina: ${fmtDate(n.date, { long: true })}`);
+    toast(n.awaitingClaude
+      ? `Další hodina ${fmtDate(n.date, { long: true })}: koncept z reflexe je hotový, Claude ji připraví.`
+      : `Další hodina: ${fmtDate(n.date, { long: true })}`);
     location.hash = `#/hodina/${n.id}`;
   });
   $('#del', view).addEventListener('click', async () => {
