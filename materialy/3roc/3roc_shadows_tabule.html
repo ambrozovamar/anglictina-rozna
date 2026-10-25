@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shadows – Outdoors</title>
+<!--
+  3. ročník · Unit 1 Outdoors, hodina 6 Shadows · hra na interaktivní tabuli (funguje offline, bez instalace)
+  Metodická poznámka:
+  - 6–8 min, 2 týmy (Team A / Team B). Tým na tahu svítí. K tabuli chodí JEDEN hráč podle pevného pořadí.
+  - Fair play: bod platí jen tehdy, když ostatní z týmu mlčí – kdo napovídá nahlas, tým bod nedostane.
+  - Režim 1 „Whose shadow?“: stín jedné věci. Hráč řekne „It's a boat.“ Učitel ťukne ✓ / ✗, pak se stín „rozsvítí“.
+  - Režim 2 „Count the shadows“: několik stínů. Hráč ťukne There's / There are (hned vidí, jestli má pravdu),
+    pak celou větu PŘEČTE NAHLAS – za správně přečtenou větu může učitel dát ★ bonus.
+  - Režim 3 „Can you see shadows?“: počasí se mění. Třída sborem: „It's sunny. Yes, I can!“ / „It's cloudy. No, I can't!“
+  - Slabší děti: tlačítko 💡 Help ukáže 3 slova na výběr (stačí vybrat a přečíst). Zdatní: přidají barvu
+    nebo větu se dvěma věcmi (There's a tent and there are two boats.).
+-->
+<style>
+  :root { --a: #e8590c; --b: #1971c2; --ok: #2f9e44; --bad: #c92a2a; --bg: #fff8e6; --ink: #1f2a1a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; user-select: none; }
+  header { display: flex; align-items: stretch; gap: 12px; padding: clamp(6px, 1.4vh, 12px) 16px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .team { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 18px; padding: clamp(2px, .8vh, 8px) clamp(10px, 1.6vw, 20px); border: 5px solid transparent; font-size: clamp(18px, min(2.4vw, 4vh), 30px); font-weight: 800; cursor: pointer; }
+  .team.a { color: var(--a); background: #fff0e6; }
+  .team.b { color: var(--b); background: #e6f1fc; }
+  .team.active.a { border-color: var(--a); }
+  .team.active.b { border-color: var(--b); }
+  .team .pts { font-size: clamp(28px, min(4vw, 7vh), 54px); min-width: 1.2em; text-align: right; }
+  .team .turn { font-size: clamp(12px, min(1.2vw, 2.2vh), 16px); font-weight: 700; opacity: 0; white-space: nowrap; }
+  .team.active .turn { opacity: 1; }
+  nav { display: flex; gap: 10px; padding: clamp(6px, 1.4vh, 12px) 16px; flex-wrap: wrap; align-items: center; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 16px; }
+  .mode { font-size: clamp(15px, min(1.7vw, 3vh), 22px); font-weight: 700; padding: clamp(8px, 1.4vh, 14px) clamp(12px, 1.6vw, 22px); background: #fff; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+  .mode.on { background: var(--ink); color: #fff; }
+  .small { font-size: clamp(14px, min(1.4vw, 2.6vh), 18px); padding: clamp(8px, 1.2vh, 12px) 16px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: 6px 16px clamp(8px, 2vh, 20px); gap: clamp(8px, 2vh, 18px); min-height: 0; }
+  .scene { width: min(1100px, 100%); flex: 1 1 auto; min-height: 0; max-height: 52vh; background: #fff; border-radius: 24px; box-shadow: 0 4px 16px rgba(0,0,0,.08); display: flex; flex-wrap: wrap; align-content: center; align-items: center; justify-content: center; gap: min(2vw, 3vh); padding: min(2vw, 3vh); overflow: hidden; position: relative; }
+  .item { --s: clamp(44px, min(11vw, 20vh), 160px); width: var(--s); height: var(--s); display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * .86); line-height: 1; transition: filter .6s, transform .3s; }
+  .item.one { --s: clamp(80px, min(24vw, 36vh), 300px); }
+  .item svg { width: 100%; height: 100%; }
+  /* Stín = obrázek vybarvený černě; po odhalení se vrátí barvy. */
+  .shadow .item { filter: brightness(0) opacity(.85); }
+  .shadow .item.lit { filter: none; transform: scale(1.06); }
+  .prompt { font-size: clamp(22px, min(4.4vw, 7vh), 60px); font-weight: 800; text-align: center; min-height: 1.3em; line-height: 1.2; }
+  .prompt .blank { display: inline-block; min-width: 3.2em; border-bottom: 6px solid currentColor; }
+  .answer { color: var(--ok); }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .big { font-size: clamp(18px, min(3.4vw, 5.2vh), 46px); font-weight: 800; padding: clamp(8px, 1.8vh, 18px) clamp(16px, 2.6vw, 40px); min-width: min(200px, 40vw); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+  .big:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .green { background: var(--ok); } .red { background: var(--bad); } .grey { background: #495057; } .violet { background: #7048e8; } .gold { background: #f08c00; }
+  .flash { animation: flash .6s; }
+  @keyframes flash { 0%,100% { background: #fff; } 40% { background: #d3f9d8; } }
+  .flash-bad { animation: flashbad .6s; }
+  @keyframes flashbad { 0%,100% { background: #fff; } 40% { background: #ffe3e3; } }
+  .hint { font-size: clamp(14px, min(1.5vw, 2.6vh), 18px); color: #6b5c3a; text-align: center; }
+  .words { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; min-height: 1em; }
+  .word { font-size: clamp(16px, min(2.6vw, 4vh), 34px); font-weight: 700; background: #fff; border-radius: 14px; padding: clamp(4px, 1vh, 8px) clamp(10px, 1.4vw, 18px); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+  /* Režim 3 – počasí */
+  .sky { width: min(1100px, 100%); flex: 1 1 auto; min-height: 0; max-height: 54vh; border-radius: 24px; overflow: hidden; position: relative; transition: background .6s; }
+  .sky svg { width: 100%; height: 100%; display: block; }
+  .sky { background: #8ce99a; }
+  @media (max-width: 600px) {
+    body { height: auto; min-height: 100%; }
+    header { flex-direction: column; gap: 6px; }
+    .scene, .sky { flex: none; min-height: 180px; }
+    .row { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="team a active" id="tA"><span>Team A <span class="turn">◀ your turn</span></span><span class="pts" id="pA">0</span></div>
+  <div class="team b" id="tB"><span>Team B <span class="turn">◀ your turn</span></span><span class="pts" id="pB">0</span></div>
+</header>
+<nav>
+  <button class="mode on" data-mode="whose">1 · Whose shadow?</button>
+  <button class="mode" data-mode="count">2 · Count the shadows</button>
+  <button class="mode" data-mode="weather">3 · Can you see shadows?</button>
+  <span style="flex:1"></span>
+  <button class="small" id="sound">🔊 Sound on</button>
+  <button class="small" id="reset">↺ New game</button>
+</nav>
+<main id="main"></main>
+
+<script>
+// ---------- Slovní zásoba (Unit 1 Outdoors, sada 1 + 2 + kite) ----------
+const SVG = {
+  mountain: '<svg viewBox="0 0 100 100"><path d="M5 90 L40 20 L58 52 L70 36 L95 90 Z" fill="#868e96"/><path d="M40 20 L30 40 L40 36 L48 42 Z" fill="#fff"/></svg>',
+};
+const WORDS = {
+  tree:     { icon: '🌳', plural: 'trees' },
+  flower:   { icon: '🌼', plural: 'flowers' },
+  bird:     { icon: '🐦', plural: 'birds' },
+  house:    { icon: '🏠', plural: 'houses' },
+  mountain: { svg: 'mountain', plural: 'mountains' },
+  tent:     { icon: '⛺', plural: 'tents' },
+  boat:     { icon: '⛵', plural: 'boats' },
+  fish:     { icon: '🐟', plural: 'fish' },
+  kite:     { icon: '🪁', plural: 'kites' },
+  dog:      { icon: '🐕', plural: 'dogs' },
+};
+const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
+const KEYS = Object.keys(WORDS);
+const art = (k) => WORDS[k].svg ? SVG[WORDS[k].svg] : WORDS[k].icon;
+const rnd = (n) => Math.floor(Math.random() * n);
+const pick = (arr) => arr[rnd(arr.length)];
+const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+// Nové / slabší slovo (tent, boat, kite, fish) chodí častěji – podle reflexe je chtějí procvičit.
+const BAG = [...KEYS, 'tent', 'boat', 'kite', 'fish', 'tent', 'boat', 'kite'];
+let last = '';
+function nextWord() { let k; do { k = pick(BAG); } while (k === last); last = k; return k; }
+
+// ---------- Body a týmy ----------
+let score = { A: 0, B: 0 }, turn = 'A', soundOn = true, mode = 'whose';
+const $ = (s) => document.querySelector(s);
+function drawScore() {
+  $('#pA').textContent = score.A; $('#pB').textContent = score.B;
+  $('#tA').classList.toggle('active', turn === 'A'); $('#tB').classList.toggle('active', turn === 'B');
+}
+function nextTurn() { turn = turn === 'A' ? 'B' : 'A'; drawScore(); }
+function point(n = 1) { score[turn] += n; drawScore(); }
+
+// ---------- Zvuk (volitelný) ----------
+let ctx;
+function beep(ok) {
+  if (!soundOn) return;
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'triangle'; o.frequency.value = ok ? 660 : 180;
+  g.gain.setValueAtTime(0.25, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (ok ? 0.35 : 0.5));
+  o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.5);
+  if (ok) { const o2 = ctx.createOscillator(), g2 = ctx.createGain(); o2.type = 'triangle'; o2.frequency.value = 880;
+    g2.gain.setValueAtTime(0.2, ctx.currentTime + .12); g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + .5);
+    o2.connect(g2).connect(ctx.destination); o2.start(ctx.currentTime + .12); o2.stop(ctx.currentTime + .55); }
+}
+function flash(ok) { const s = $('.scene'); if (!s) return; s.classList.remove('flash', 'flash-bad'); void s.offsetWidth; s.classList.add(ok ? 'flash' : 'flash-bad'); }
+const light = () => document.querySelectorAll('.scene .item').forEach((e) => e.classList.add('lit'));
+
+// ---------- Režim 1: Whose shadow? ----------
+function roundWhose() {
+  const k = nextWord();
+  const options = shuffle([k, ...shuffle(KEYS.filter((x) => x !== k)).slice(0, 2)]);
+  $('#main').innerHTML = `
+    <div class="scene shadow"><div class="item one">${art(k)}</div></div>
+    <div class="prompt" id="prompt">What is it? It's a <span class="blank"></span></div>
+    <div class="words" id="help"></div>
+    <div class="row">
+      <button class="big gold" id="hint">💡 Help</button>
+      <button class="big green" id="ok">✓ Correct</button>
+      <button class="big red" id="no">✗ Try again</button>
+    </div>
+    <div class="hint">Say: “It's a …” – the shadow lights up after ✓ or ✗.</div>`;
+  $('#hint').onclick = () => { $('#help').innerHTML = options.map((w) => `<span class="word">${w}</span>`).join(''); };
+  const reveal = () => { light(); $('#prompt').innerHTML = `<span class="answer">It's a ${k}!</span>`; };
+  $('#ok').onclick = () => { beep(true); flash(true); reveal(); point(); nextTurn(); setTimeout(roundWhose, 1500); };
+  $('#no').onclick = () => { beep(false); flash(false); reveal(); nextTurn(); setTimeout(roundWhose, 2200); };
+}
+
+// ---------- Režim 2: Count the shadows (There's / There are) ----------
+function sentence(k, n) { return n === 1 ? `There's a ${k}.` : `There are ${NUM[n]} ${WORDS[k].plural}.`; }
+function roundCount() {
+  const k = nextWord();
+  const n = Math.random() < 0.4 ? 1 : 2 + rnd(4);
+  const items = Array.from({ length: n }, () => `<div class="item">${art(k)}</div>`).join('');
+  $('#main').innerHTML = `
+    <div class="scene shadow">${items}</div>
+    <div class="prompt" id="prompt"><span class="blank"></span> … ?</div>
+    <div class="row" id="choice">
+      <button class="big grey" data-a="1">There's a …</button>
+      <button class="big grey" data-a="2">There are …</button>
+    </div>
+    <div class="hint">One shadow → There's a … · Two or more → There are … + s (fish = fish!)</div>`;
+  document.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
+    const ok = (b.dataset.a === '1') === (n === 1);
+    beep(ok); flash(ok); light();
+    $('#prompt').innerHTML = `<span class="answer">${sentence(k, n)}</span>`;
+    if (ok) point();
+    // Po volbě hráč větu přečte nahlas; učitel může přidat bonus ★ a pak pokračovat.
+    $('#choice').innerHTML = `<button class="big gold" id="bonus">★ Read it aloud! +1</button><button class="big violet" id="next">Next ▶</button>`;
+    $('.hint').textContent = ok ? 'Well done! Now read the whole sentence aloud.' : 'Look at the sentence. Read it aloud together!';
+    $('#bonus').onclick = () => { beep(true); point(); nextTurn(); roundCount(); };
+    $('#next').onclick = () => { nextTurn(); roundCount(); };
+  });
+}
+
+// ---------- Režim 3: Can you see shadows? ----------
+const WEATHER = {
+  sunny:   { say: "It's sunny.",   shadow: true,  sky: '#a5d8ff' },
+  cloudy:  { say: "It's cloudy.",  shadow: false, sky: '#ced4da' },
+  raining: { say: "It's raining.", shadow: false, sky: '#adb5bd' },
+  snowing: { say: "It's snowing.", shadow: false, sky: '#dee2e6' },
+};
+function weatherSvg(w) {
+  const sun = '<circle cx="840" cy="80" r="52" fill="#ffd43b"/><g stroke="#fab005" stroke-width="8">' +
+    [0, 45, 90, 135, 180, 225, 270, 315].map((a) => { const r = a * Math.PI / 180; return `<line x1="${840 + 66 * Math.cos(r)}" y1="${80 + 66 * Math.sin(r)}" x2="${840 + 90 * Math.cos(r)}" y2="${80 + 90 * Math.sin(r)}"/>`; }).join('') + '</g>';
+  const cloud = (x, y, c) => `<g fill="${c}"><ellipse cx="${x}" cy="${y}" rx="80" ry="40"/><ellipse cx="${x - 55}" cy="${y + 15}" rx="55" ry="30"/><ellipse cx="${x + 60}" cy="${y + 15}" rx="55" ry="30"/></g>`;
+  const drops = Array.from({ length: 26 }, (_, i) => `<line x1="${60 + i * 36}" y1="${150 + (i % 4) * 40}" x2="${50 + i * 36}" y2="${175 + (i % 4) * 40}" stroke="#4dabf7" stroke-width="5" stroke-linecap="round"/>`).join('');
+  const flakes = Array.from({ length: 26 }, (_, i) => `<text x="${50 + i * 36}" y="${170 + (i % 4) * 45}" font-size="28" fill="#fff">❄</text>`).join('');
+  const kid = (x) => `<g><circle cx="${x}" cy="250" r="26" fill="#ffc9a3"/><rect x="${x - 26}" y="278" width="52" height="80" rx="18" fill="#e8590c"/><rect x="${x - 22}" y="356" width="16" height="50" fill="#1971c2"/><rect x="${x + 6}" y="356" width="16" height="50" fill="#1971c2"/></g>`;
+  const kidShadow = (x) => `<g fill="rgba(0,0,0,.45)" transform="translate(${x} 406) skewX(-62) scale(1 -0.3) translate(${-x} -406)"><circle cx="${x}" cy="250" r="26"/><rect x="${x - 26}" y="278" width="52" height="80" rx="18"/><rect x="${x - 22}" y="356" width="16" height="50"/><rect x="${x + 6}" y="356" width="16" height="50"/></g>`;
+  const tree = `<rect x="160" y="290" width="26" height="116" fill="#8d5524"/><circle cx="173" cy="260" r="70" fill="#2f9e44"/>`;
+  const treeShadow = `<g fill="rgba(0,0,0,.4)" transform="translate(173 406) skewX(-62) scale(1 -0.3) translate(-173 -406)"><rect x="160" y="290" width="26" height="116"/><circle cx="173" cy="260" r="70"/></g>`;
+  const s = WEATHER[w].shadow;
+  return `<svg viewBox="0 0 1000 460" preserveAspectRatio="xMidYMax meet" style="overflow:visible">
+    <rect x="-1500" y="-600" width="4000" height="1100" fill="${WEATHER[w].sky}"/>
+    <rect x="-1500" y="400" width="4000" height="400" fill="${w === 'snowing' ? '#f8f9fa' : '#8ce99a'}"/>
+    ${w === 'sunny' ? sun : cloud(780, 90, w === 'cloudy' ? '#f1f3f5' : '#868e96') + cloud(420, 70, w === 'cloudy' ? '#e9ecef' : '#868e96')}
+    ${w === 'raining' ? drops : ''}${w === 'snowing' ? flakes : ''}
+    ${s ? treeShadow + kidShadow(560) : ''}${tree}${kid(560)}
+  </svg>`;
+}
+let lastW = '';
+function roundWeather() {
+  let w; do { w = pick(Object.keys(WEATHER)); } while (w === lastW); lastW = w;
+  $('#main').innerHTML = `
+    <div class="sky">${weatherSvg(w)}</div>
+    <div class="prompt" id="prompt">What's the weather like? Can you see shadows?</div>
+    <div class="row" id="choice">
+      <button class="big green" data-a="yes">Yes, I can!</button>
+      <button class="big red" data-a="no">No, I can't!</button>
+    </div>
+    <div class="hint">Everybody together: first the weather (“It's sunny.”), then Yes / No.</div>`;
+  document.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
+    const ok = (b.dataset.a === 'yes') === WEATHER[w].shadow;
+    beep(ok);
+    if (ok) point();
+    $('#prompt').innerHTML = `<span class="answer">${WEATHER[w].say} ${WEATHER[w].shadow ? 'Yes, I can see shadows!' : "No, I can't see shadows."}</span>`;
+    $('#choice').innerHTML = `<button class="big violet" id="next">Next ▶</button>`;
+    $('#next').onclick = () => { nextTurn(); roundWeather(); };
+  });
+}
+
+// ---------- Ovládání ----------
+const MODES = { whose: roundWhose, count: roundCount, weather: roundWeather };
+document.querySelectorAll('.mode').forEach((b) => b.onclick = () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('.mode').forEach((x) => x.classList.toggle('on', x === b));
+  MODES[mode]();
+});
+$('#tA').onclick = () => { turn = 'A'; drawScore(); };
+$('#tB').onclick = () => { turn = 'B'; drawScore(); };
+$('#sound').onclick = () => { soundOn = !soundOn; $('#sound').textContent = soundOn ? '🔊 Sound on' : '🔇 Sound off'; };
+$('#reset').onclick = () => { if (confirm('New game – reset points?')) { score = { A: 0, B: 0 }; turn = 'A'; drawScore(); MODES[mode](); } };
+drawScore();
+roundWhose();
+</script>
+</body>
+</html>
