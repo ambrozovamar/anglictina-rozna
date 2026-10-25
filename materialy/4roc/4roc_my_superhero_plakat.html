@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My superhero – poster</title>
+<!--
+  4. ročník · Unit 1 Let's play · plakát My superhero (can / can't, he / she) · tisk A4 (lze zvětšit na A3)
+  Strana 1 = ★ základ (začátky vět + nabídka slov), strana 2 = ★★ challenge (volné psaní, and / but, otázky),
+  strana 3 = vzor učitelky na tabuli / k promítnutí. Metodická poznámka je i na obrazovce nad listy (netiskne se).
+-->
+<style>
+  @page { size: A4; margin: 10mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9ecef; font-family: "Segoe UI", system-ui, sans-serif; color: #1b1f3a; }
+  .note { max-width: 190mm; margin: 12px auto; background: #fff8db; border: 2px solid #f0c419; border-radius: 12px; padding: 10px 16px; font-size: 14px; line-height: 1.45; }
+  .note h2 { margin: 0 0 4px; font-size: 17px; }
+  .note ul { margin: 4px 0; padding-left: 20px; }
+  .note button { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 8px 16px; background: #1b1f3a; color: #fff; cursor: pointer; }
+  .page { width: 190mm; height: 277mm; margin: 12px auto; background: #fff; padding: 8mm 9mm; display: flex; flex-direction: column; gap: 4mm; box-shadow: 0 2px 10px rgba(0,0,0,.15); overflow: hidden; }
+  .head { display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 34pt; letter-spacing: 1px; color: #c92a2a; font-weight: 900; }
+  h1 span { color: #1971c2; }
+  .lvl { font-size: 13pt; font-weight: 800; border: 2px solid currentColor; border-radius: 20px; padding: 2px 12px; }
+  .lvl.s1 { color: #2f9e44; } .lvl.s2 { color: #7048e8; }
+  .instr { font-size: 12.5pt; font-weight: 600; margin: 0; }
+  .name { font-size: 17pt; font-weight: 700; display: flex; align-items: flex-end; gap: 6px; }
+  .name .ln { flex: 1; border-bottom: 2px solid #1b1f3a; height: 1.1em; }
+  .draw { flex: 1 1 auto; border: 3px dashed #adb5bd; border-radius: 18px; position: relative; min-height: 70mm; }
+  .draw .lbl { position: absolute; top: 6px; left: 12px; color: #adb5bd; font-size: 11pt; font-weight: 600; }
+  .heshe { font-size: 15pt; font-weight: 700; }
+  .heshe b { border: 2px solid #1b1f3a; border-radius: 20px; padding: 0 10px; margin: 0 4px; }
+  .lines { display: flex; flex-direction: column; gap: 3.2mm; }
+  .sent { font-size: 16pt; font-weight: 600; display: flex; align-items: flex-end; gap: 6px; }
+  .sent .mark { width: 9mm; text-align: center; font-weight: 900; }
+  .sent .ok { color: #2f9e44; } .sent .no { color: #c92a2a; }
+  .sent .ln { flex: 1; border-bottom: 2px solid #868e96; height: 1.05em; }
+  .bank { border: 2px solid #1971c2; border-radius: 14px; padding: 2.5mm 3mm; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5mm 3mm; font-size: 11pt; }
+  .bank div { white-space: nowrap; }
+  .bank .t { grid-column: 1 / -1; font-weight: 800; color: #1971c2; font-size: 11.5pt; }
+  .free { display: flex; flex-direction: column; gap: 4.2mm; }
+  .free .ln { border-bottom: 2px solid #868e96; height: 7.5mm; }
+  .check { display: flex; flex-wrap: wrap; gap: 4mm 8mm; font-size: 12pt; font-weight: 600; }
+  .q { font-size: 14pt; font-weight: 700; }
+  .ex { font-size: 19pt; line-height: 1.55; font-weight: 600; }
+  .ex .ok { color: #2f9e44; } .ex .no { color: #c92a2a; }
+  .hero { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-size: 90pt; gap: 8mm; border: 3px solid #ffd43b; border-radius: 18px; background: #fff9db; }
+  @media print {
+    body { background: #fff; }
+    .note { display: none; }
+    .page { margin: 0; box-shadow: none; page-break-after: always; break-after: page; }
+    .page:last-child { page-break-after: auto; break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="note">
+  <h2>Metodická poznámka – My superhero (4. ročník, 20–25 min + prezentace 10 min)</h2>
+  <ul>
+    <li><b>Uvedení:</b> ukažte vzor (strana 3) a nahlas ho přečtěte. Děti hádají, jestli je to <i>he</i> nebo <i>she</i>. Pozor na „Rosie I can“ – v plakátu je vždy <b>He / She can …</b>, nikdy <b>I</b>.</li>
+    <li><b>★ (strana 1):</b> pro většinu třídy a slabší děti – začátky vět + obrázková nabídka slov. Cíl: 3× can, 2× can't.</li>
+    <li><b>★★ (strana 2):</b> pro zdatné (dívka, která mluví plynule, ale potřebuje psát) – volné psaní s <i>and / but</i> a 2 otázky pro třídu <i>Can he / she …?</i></li>
+    <li><b>🤝 Podpora:</b> slabší dítě smí nalepit / přepsat slovo z nabídky; stačí 3 věty. Vedle sebe flashcards + wordcards na tabuli.</li>
+    <li><b>Kázeň:</b> pastelky až po napsání vět (nejdřív píšu, pak kreslím). Hotoví se přihlásí, učitelka zkontroluje, pak teprve kreslí a vybarvují.</li>
+    <li><b>Na PC:</b> stejné zadání lze dělat v Canvě nebo ve Wordu (jako loni) – obrázek superhrdiny vložit / nakreslit, věty napsat. Chráněné postavy (Marvel, DC…) ne – každý si vymyslí <b>vlastního</b> superhrdinu.</li>
+    <li><b>Prezentace:</b> „This is Super … . She can … , but she can't … .“ Třída se ptá: „Can she dive?“ – autor odpovídá „Yes, she can. / No, she can't.“</li>
+  </ul>
+  <button onclick="print()">🖨️ Tisk (A4, 3 strany – tiskněte jen potřebné)</button>
+</div>
+
+<!-- ★ Strana 1 -->
+<section class="page">
+  <div class="head"><h1>MY <span>SUPERHERO</span></h1><span class="lvl s1">★</span></div>
+  <p class="instr">Draw your superhero. Circle <i>he</i> or <i>she</i>. Write.</p>
+  <div class="name">My superhero is Super <span class="ln"></span></div>
+  <div class="draw"><span class="lbl">Draw here ✏️</span></div>
+  <div class="heshe">My superhero is a <b>boy – he</b> / <b>girl – she</b></div>
+  <div class="lines">
+    <div class="sent"><span class="mark ok">✓</span>He / She can <span class="ln"></span>.</div>
+    <div class="sent"><span class="mark ok">✓</span>He / She can <span class="ln"></span>.</div>
+    <div class="sent"><span class="mark ok">✓</span>He / She can <span class="ln"></span> and <span class="ln"></span>.</div>
+    <div class="sent"><span class="mark no">✗</span>He / She can't <span class="ln"></span>.</div>
+    <div class="sent"><span class="mark no">✗</span>He / She can't <span class="ln"></span>.</div>
+  </div>
+  <div class="bank">
+    <div class="t">Words to help you:</div>
+    <div>🦅 fly</div><div>🏊 swim</div><div>🤿 dive</div><div>🏃 run fast</div>
+    <div>🧗 climb</div><div>⛸️ skate</div><div>🛹 skateboard</div><div>🛼 rollerblade</div>
+    <div>🏇 ride a horse</div><div>🚲 ride a bike</div><div>🎨 paint</div><div>✏️ draw</div>
+    <div>🎤 sing</div><div>💃 dance</div><div>🥁 play the drums</div><div>🎸 play the guitar</div>
+    <div>🎹 play the piano</div><div>🎻 play the violin</div><div>⚽ play football</div><div>🎾 play tennis</div>
+  </div>
+</section>
+
+<!-- ★★ Strana 2 -->
+<section class="page">
+  <div class="head"><h1>MY <span>SUPERHERO</span></h1><span class="lvl s2">★★</span></div>
+  <p class="instr">Draw your superhero. Write about him / her. Use <i>can</i>, <i>can't</i>, <i>and</i>, <i>but</i>.</p>
+  <div class="name">This is Super <span class="ln"></span></div>
+  <div class="draw" style="min-height:62mm"><span class="lbl">Draw here ✏️</span></div>
+  <div class="free">
+    <div class="ln"></div><div class="ln"></div><div class="ln"></div>
+    <div class="ln"></div><div class="ln"></div><div class="ln"></div>
+  </div>
+  <div class="q">Write 2 questions for your friends: <i>Can he / she …?</i></div>
+  <div class="free"><div class="ln"></div><div class="ln"></div></div>
+  <div class="check"><span>☐ can</span><span>☐ can't</span><span>☐ and</span><span>☐ but</span><span>☐ 2 questions</span><span>☐ He / She (not I!)</span></div>
+</section>
+
+<!-- Vzor – Strana 3 -->
+<section class="page">
+  <div class="head"><h1>MY <span>SUPERHERO</span></h1><span class="lvl" style="color:#f08c00">Example</span></div>
+  <div class="name" style="font-size:26pt">This is Super Rosie!</div>
+  <div class="hero">🦸‍♀️<span style="font-size:60pt">🦅🥁🏊</span></div>
+  <div class="ex">
+    <div><span class="ok">✓</span> She can fly.</div>
+    <div><span class="ok">✓</span> She can swim and she can dive.</div>
+    <div><span class="ok">✓</span> She can play the drums and the guitar.</div>
+    <div><span class="no">✗</span> She can't skate and she can't play tennis.</div>
+    <div>She can ride a horse, but she can't ride a bike!</div>
+  </div>
+  <div class="q" style="font-size:18pt">Can she dive? – Yes, she can. · Can she skate? – No, she can't.</div>
+</section>
+
+</body>
+</html>
