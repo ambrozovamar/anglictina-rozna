@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ball Story</title>
+<!--
+  2. ročník · A Ball Story (In the garden) · hra na interaktivní tabuli (funguje offline, bez instalace)
+  Metodická poznámka:
+  - Režim 1 „Story“ (5–7 min): příběh krok za krokem, míčky se kutálejí / skáčou. Každé dítě má roli:
+    drží kartičku (house, garden, tree, grass, flower) a když se jeho věc rozsvítí, postaví se a řekne slovo.
+    Dva „míčky“ (kluci) chodí ťukat na ▶ Next a říkají rolls / jumps.
+  - Režim 2 „I spy“ (4–5 min): „I spy with my little eye something green!“ – dítě ťukne na věc té barvy a řekne ji.
+  - Režim 3 „Listen and tap“ (4–5 min): tabule řekne (🔊) nebo ukáže větu. Dítě ťukne na správný míček a pak na věc.
+  - K tabuli chodí vždy jedno dítě podle pořadí (losování). Ostatní sedí – za tiché sezení hvězdička pro celou třídu.
+  - Slabší / nesmělé dítě: v I spy smí jen ťuknout; nadané: říká celou větu (The big yellow ball jumps over the tree.).
+  - Zvuk: angličtina z počítače (britský hlas, pokud je ve Windows). Bez zvuku čte věty učitelka.
+-->
+<style>
+  :root { --ink: #1f2a44; --bg: #eef7ff; --ok: #2f9e44; --bad: #e03131; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; user-select: none; }
+  nav { display: flex; gap: 10px; padding: clamp(6px, 1.4vh, 12px) 16px; flex-wrap: wrap; align-items: center; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 16px; }
+  .mode { font-size: clamp(15px, min(1.8vw, 3.2vh), 24px); font-weight: 800; padding: clamp(8px, 1.4vh, 14px) clamp(12px, 1.8vw, 24px); background: #f1f3f5; color: var(--ink); }
+  .mode.on { background: var(--ink); color: #fff; }
+  .small { font-size: clamp(14px, min(1.4vw, 2.6vh), 18px); padding: clamp(8px, 1.2vh, 12px) 16px; background: #f1f3f5; }
+  .stars { font-size: clamp(20px, min(2.6vw, 4.6vh), 34px); min-width: 4em; text-align: right; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: safe center; padding: 8px 16px clamp(8px, 2vh, 18px); gap: clamp(6px, 1.6vh, 14px); min-height: 0; }
+  .stage { width: min(1200px, 100%); flex: 1 1 auto; min-height: 0; max-height: 60vh; border-radius: 24px; overflow: hidden; background: #a5d8ff; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  .stage svg { width: 100%; height: 100%; display: block; }
+  .obj { cursor: pointer; transition: filter .3s; }
+  .obj.glow { filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 18px #ffd43b); }
+  .obj.wrong { filter: drop-shadow(0 0 12px #e03131); }
+  .say { font-size: clamp(22px, min(3.8vw, 6.4vh), 54px); font-weight: 800; text-align: center; min-height: 1.25em; line-height: 1.2; }
+  .say.hidden span { filter: blur(14px); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .big { font-size: clamp(18px, min(3vw, 5vh), 40px); font-weight: 800; padding: clamp(8px, 1.6vh, 16px) clamp(16px, 2.4vw, 36px); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+  .big:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .violet { background: #7048e8; } .green { background: var(--ok); } .blue { background: #1c7ed6; } .orange { background: #f08c00; } .grey { background: #868e96; }
+  .hint { font-size: clamp(14px, min(1.5vw, 2.6vh), 18px); color: #495057; text-align: center; }
+  @media (max-width: 600px) { body { height: auto; min-height: 100%; } .stage { flex: none; height: 46vh; } }
+</style>
+</head>
+<body>
+<nav>
+  <button class="mode on" data-mode="story">1 · Story</button>
+  <button class="mode" data-mode="spy">2 · I spy</button>
+  <button class="mode" data-mode="tap">3 · Listen and tap</button>
+  <span style="flex:1"></span>
+  <span class="stars" id="stars"></span>
+  <button class="small" id="voice">🔊 Voice on</button>
+  <button class="small" id="reset">↺ Stars</button>
+</nav>
+<main>
+  <div class="stage"><svg id="svg" viewBox="0 0 1000 480" preserveAspectRatio="xMidYMax meet" style="overflow:visible"></svg></div>
+  <div class="say" id="say"></div>
+  <div class="row" id="row"></div>
+  <div class="hint" id="hint"></div>
+</main>
+
+<script>
+// ---------- Scéna: věci z příběhu ----------
+// cx = střed věci, w/h = přibližná velikost (pro dráhu míčků), colours = barvy pro I spy
+const OBJ = {
+  house:  { cx: 130, w: 170, h: 190, colours: ['red', 'white', 'brown'] },
+  garden: { cx: 330, w: 170, h: 90,  colours: ['green', 'brown', 'pink'] },
+  tree:   { cx: 520, w: 150, h: 230, colours: ['green', 'brown'] },
+  grass:  { cx: 700, w: 140, h: 60,  colours: ['green'] },
+  flower: { cx: 870, w: 90,  h: 140, colours: ['red', 'yellow', 'green'] },
+};
+const GROUND = 410;
+const ART = {
+  house: `<rect x="60" y="270" width="140" height="140" fill="#fff" stroke="#495057" stroke-width="4"/>
+    <polygon points="45,275 130,195 215,275" fill="#e03131" stroke="#495057" stroke-width="4"/>
+    <rect x="112" y="340" width="38" height="70" fill="#8d5524"/><rect x="78" y="295" width="34" height="30" fill="#a5d8ff" stroke="#495057" stroke-width="3"/>
+    <rect x="152" y="295" width="34" height="30" fill="#a5d8ff" stroke="#495057" stroke-width="3"/>`,
+  garden: `<rect x="250" y="340" width="160" height="70" rx="10" fill="#51cf66"/>
+    ${[260, 290, 320, 350, 380, 405].map((x) => `<rect x="${x}" y="330" width="10" height="80" fill="#a0522d"/>`).join('')}
+    <rect x="250" y="350" width="165" height="8" fill="#a0522d"/><rect x="250" y="385" width="165" height="8" fill="#a0522d"/>
+    <circle cx="300" cy="372" r="9" fill="#f783ac"/><circle cx="360" cy="368" r="9" fill="#f783ac"/>`,
+  tree: `<rect x="505" y="290" width="30" height="120" fill="#8d5524"/>
+    <circle cx="520" cy="245" r="78" fill="#2f9e44"/><circle cx="470" cy="275" r="40" fill="#37b24d"/><circle cx="570" cy="275" r="40" fill="#37b24d"/>`,
+  grass: `<path d="M632 410 L645 352 L655 410 L668 340 L680 410 L692 348 L705 410 L718 336 L730 410 L742 350 L755 410 L768 345 L772 410 Z" fill="#40c057"/>`,
+  flower: `<rect x="866" y="330" width="8" height="80" fill="#2f9e44"/><ellipse cx="850" cy="370" rx="16" ry="7" fill="#2f9e44"/>
+    ${[0, 72, 144, 216, 288].map((a) => `<ellipse cx="${870 + 22 * Math.cos(a * Math.PI / 180)}" cy="${300 + 22 * Math.sin(a * Math.PI / 180)}" rx="15" ry="15" fill="#e03131"/>`).join('')}
+    <circle cx="870" cy="300" r="15" fill="#ffd43b"/>
+    <g id="face" opacity="0"><circle cx="864" cy="297" r="2.5" fill="#1f2a44"/><circle cx="876" cy="297" r="2.5" fill="#1f2a44"/><path id="mouth" d="M863 305 q7 6 14 0" stroke="#1f2a44" stroke-width="2" fill="none"/></g>`,
+};
+const svg = document.getElementById('svg');
+function drawScene() {
+  svg.innerHTML = `
+    <rect x="-1500" y="-600" width="4000" height="1100" fill="#a5d8ff"/>
+    <circle cx="930" cy="60" r="40" fill="#ffd43b" class="obj" data-k="sun"/>
+    <rect x="-1500" y="${GROUND}" width="4000" height="400" fill="#8ce99a"/>
+    ${Object.keys(OBJ).map((k) => `<g class="obj" data-k="${k}">${ART[k]}</g>`).join('')}
+    <g id="bigBall" class="obj" data-k="big ball"><circle r="34" fill="#fcc419" stroke="#e67700" stroke-width="4"/><path d="M-24 -10 q24 18 48 0" stroke="#e67700" stroke-width="4" fill="none"/></g>
+    <g id="smallBall" class="obj" data-k="small ball"><circle r="20" fill="#339af0" stroke="#1864ab" stroke-width="3"/><path d="M-14 -6 q14 12 28 0" stroke="#1864ab" stroke-width="3" fill="none"/></g>`;
+  place('bigBall', 40, GROUND - 34); place('smallBall', 20, GROUND - 20);
+}
+const pos = { bigBall: [40, GROUND - 34, 0], smallBall: [20, GROUND - 20, 0] };
+function place(id, x, y, rot = 0) { pos[id] = [x, y, rot]; document.getElementById(id).setAttribute('transform', `translate(${x} ${y}) rotate(${rot})`); }
+const glow = (k, on = true) => svg.querySelectorAll(`[data-k="${k}"]`).forEach((e) => e.classList.toggle('glow', on));
+
+// ---------- Animace ----------
+function animate(ms, step) {
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const f = (t) => { const p = Math.min(1, (t - t0) / ms); step(p); p < 1 ? requestAnimationFrame(f) : res(); };
+    requestAnimationFrame(f);
+  });
+}
+async function moveTo(id, x, y, ms = 500) {
+  const [x0, y0, r0] = pos[id];
+  await animate(ms, (p) => place(id, x0 + (x - x0) * p, y0 + (y - y0) * p, r0 + (x - x0) * p * 2));
+}
+// malý modrý míček se kutálí dokola kolem věci (elipsa: za věcí výš, před věcí na zemi)
+async function rollAround(k) {
+  const o = OBJ[k], r = 20, rx = o.w / 2 + 34, ry = 26;
+  await moveTo('smallBall', o.cx - rx, GROUND - r - 4, 600);
+  const turns = 1;
+  await animate(2200 * turns, (p) => {
+    const a = Math.PI + p * 2 * Math.PI * turns;
+    place('smallBall', o.cx + rx * Math.cos(a), GROUND - r - 4 + ry * Math.sin(a), p * 720 * turns);
+  });
+}
+// velký žlutý míček skočí obloukem přes věc
+async function jumpOver(k, land = 'over') {
+  const o = OBJ[k], r = 34, x0 = o.cx - o.w / 2 - 40, x1 = o.cx + o.w / 2 + 40;
+  await moveTo('bigBall', x0, GROUND - r, 500);
+  if (land === 'on') {
+    const y0 = GROUND - r, y1 = GROUND - o.h - r + 40;
+    await animate(1000, (p) => place('bigBall', x0 + (o.cx - x0) * p, (1 - p) * y0 + p * y1 - 4 * 90 * p * (1 - p), p * 270));
+    return;
+  }
+  const top = GROUND - o.h - 70;
+  await animate(1100, (p) => place('bigBall', x0 + (x1 - x0) * p, GROUND - r - (GROUND - r - top) * Math.sin(p * Math.PI), p * 360));
+}
+function flowerFace(sad) {
+  const f = document.getElementById('face'); if (!f) return;
+  f.setAttribute('opacity', 1);
+  document.getElementById('mouth').setAttribute('d', sad ? 'M863 309 q7 -6 14 0' : 'M863 305 q7 6 14 0');
+}
+
+// ---------- Hlas (volitelný) ----------
+let voiceOn = true, voice = null;
+function pickVoice() { const v = speechSynthesis.getVoices(); voice = v.find((x) => x.lang === 'en-GB') || v.find((x) => x.lang.startsWith('en')) || null; }
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text) {
+  if (!voiceOn || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); if (voice) u.voice = voice; u.lang = 'en-GB'; u.rate = .85;
+  speechSynthesis.speak(u);
+}
+const $ = (s) => document.querySelector(s);
+function say(text, hidden = false) { $('#say').innerHTML = `<span>${text}</span>`; $('#say').classList.toggle('hidden', hidden); }
+
+// ---------- Hvězdičky pro třídu ----------
+let stars = 0;
+function star() { stars++; $('#stars').textContent = '⭐'.repeat(Math.min(stars, 10)) + (stars > 10 ? ` ${stars}` : ''); }
+
+// ---------- Režim 1: Story ----------
+const STORY = [
+  ['intro', 'Look! A house, a garden, a tree, grass and a flower.'],
+  ['roll', 'house'], ['jump', 'house'],
+  ['roll', 'garden'], ['jump', 'garden'],
+  ['roll', 'tree'], ['jump', 'tree'],
+  ['roll', 'grass'], ['jump', 'grass'],
+  ['roll', 'flower'], ['oops', 'flower'],
+  ['line', '“Ouch!” says the flower.'],
+  ['line', '“Oh, I’m sorry!” says the big yellow ball.'],
+  ['line', '“Oh, I’m sorry!” says the small blue ball.'],
+  ['line', 'The flower smiles. “That’s fine. Let’s play and let’s have fun!”'],
+  ['end', 'They are having fun!'],
+];
+let si = 0, busy = false;
+function startStory() {
+  si = 0; drawScene();
+  say('The Ball Story');
+  $('#row').innerHTML = `<button class="big violet" id="next">▶ Next</button><button class="big grey" id="again">↺ From the start</button>`;
+  $('#hint').textContent = 'Holders: stand up and say your word when it shines. Balls: tap ▶ Next and say “rolls” / “jumps”.';
+  $('#next').onclick = storyStep; $('#again').onclick = startStory;
+}
+async function storyStep() {
+  if (busy || si >= STORY.length) return;
+  busy = true;
+  const [t, k] = STORY[si++];
+  Object.keys(OBJ).forEach((o) => glow(o, false));
+  if (t === 'intro') { say(k); speak(k); for (const o of Object.keys(OBJ)) { glow(o); await animate(500, () => {}); glow(o, false); } }
+  if (t === 'roll') { const s = `The small blue ball rolls and rolls around the ${k}.`; say(s); speak(s); glow(k); await rollAround(k); }
+  if (t === 'jump') { const s = `The big yellow ball jumps over the ${k}.`; say(s); speak(s); glow(k); await jumpOver(k); }
+  if (t === 'oops') { const s = `The big yellow ball jumps over the flower – Oops! It jumps on the flower.`; say(s); speak(s); glow(k); await jumpOver(k, 'on'); flowerFace(true); }
+  if (t === 'line') { say(k); speak(k.replace(/[“”]/g, '')); if (k.includes('smiles')) { await moveTo('bigBall', OBJ.flower.cx - 110, GROUND - 34, 600); flowerFace(false); } }
+  if (t === 'end') {
+    say(k); speak('So the small blue ball rolls and rolls around the flower, the big yellow ball jumps and jumps around the flower, and the flower dances in the middle. They are having fun!');
+    glow('flower');
+    await Promise.all([rollAround('flower'), (async () => { for (let i = 0; i < 3; i++) await jumpOver('flower'); })()]);
+  }
+  if (si >= STORY.length) $('#next').textContent = '⭐ The end!';
+  busy = false;
+}
+
+// ---------- Režim 2: I spy ----------
+const SPY_COLOURS = { red: ['house', 'flower'], green: ['garden', 'tree', 'grass', 'flower'], yellow: ['flower', 'big ball', 'sun'], blue: ['small ball'], brown: ['house', 'tree', 'garden'], white: ['house'], pink: ['garden'] };
+let spyColour = '', lastSpy = '';
+function startSpy() {
+  drawScene(); place('bigBall', 430, GROUND - 34); place('smallBall', 610, GROUND - 20);
+  let c; do { c = Object.keys(SPY_COLOURS)[Math.floor(Math.random() * 7)]; } while (c === lastSpy); lastSpy = spyColour = c;
+  const s = `I spy with my little eye something ${c}!`;
+  say(s); speak(s);
+  $('#row').innerHTML = `<button class="big orange" id="newSpy">👀 New colour</button><button class="big blue" id="repeat">🔊 Again</button>`;
+  $('#hint').textContent = 'Tap something of that colour and say what it is: “a tree!”';
+  $('#newSpy').onclick = startSpy; $('#repeat').onclick = () => speak(s);
+  svg.querySelectorAll('.obj').forEach((e) => e.onclick = () => {
+    const k = e.dataset.k, ok = SPY_COLOURS[spyColour].includes(k);
+    e.classList.add(ok ? 'glow' : 'wrong'); setTimeout(() => e.classList.remove('wrong'), 700);
+    if (ok) { const t = k === 'grass' ? 'Grass!' : `A ${k}!`; say(`${t} It's ${spyColour}. ✔`); speak(`Yes! ${t}`); star(); }
+    else speak('Try again!');
+  });
+}
+
+// ---------- Režim 3: Listen and tap ----------
+let task = null, picked = null;
+function startTap() {
+  drawScene(); picked = null;
+  const k = Object.keys(OBJ)[Math.floor(Math.random() * 5)];
+  const ball = Math.random() < .5 ? 'small ball' : 'big ball';
+  const s = ball === 'small ball' ? `The small blue ball rolls around the ${k}.` : `The big yellow ball jumps over the ${k}.`;
+  task = { k, ball, s };
+  say(s, true); speak(s);
+  $('#row').innerHTML = `<button class="big blue" id="repeat">🔊 Listen again</button><button class="big grey" id="show">👀 Show the words</button><button class="big orange" id="newTap">▶ New</button>`;
+  $('#hint').textContent = 'Listen. Tap the ball first, then tap the place.';
+  $('#repeat').onclick = () => speak(s); $('#show').onclick = () => $('#say').classList.remove('hidden'); $('#newTap').onclick = startTap;
+  svg.querySelectorAll('.obj').forEach((e) => e.onclick = async () => {
+    if (busy) return;
+    const k2 = e.dataset.k;
+    if (!picked) {
+      if (k2 === task.ball) { picked = k2; e.classList.add('glow'); speak(k2 === 'small ball' ? 'The small blue ball!' : 'The big yellow ball!'); }
+      else { e.classList.add('wrong'); setTimeout(() => e.classList.remove('wrong'), 700); speak('Which ball?'); }
+      return;
+    }
+    if (k2 === task.k) {
+      busy = true; $('#say').classList.remove('hidden'); glow(k2);
+      task.ball === 'small ball' ? await rollAround(k2) : await jumpOver(k2);
+      star(); speak('Well done!'); busy = false;
+    } else if (OBJ[k2]) { e.classList.add('wrong'); setTimeout(() => e.classList.remove('wrong'), 700); speak('Listen again!'); }
+  });
+}
+
+// ---------- Ovládání ----------
+const MODES = { story: startStory, spy: startSpy, tap: startTap };
+document.querySelectorAll('.mode').forEach((b) => b.onclick = () => {
+  if (busy) return;
+  document.querySelectorAll('.mode').forEach((x) => x.classList.toggle('on', x === b));
+  speechSynthesis && speechSynthesis.cancel();
+  MODES[b.dataset.mode]();
+});
+$('#voice').onclick = () => { voiceOn = !voiceOn; $('#voice').textContent = voiceOn ? '🔊 Voice on' : '🔇 Voice off'; if (!voiceOn) speechSynthesis.cancel(); };
+$('#reset').onclick = () => { stars = 0; $('#stars').textContent = ''; };
+startStory();
+</script>
+</body>
+</html>
