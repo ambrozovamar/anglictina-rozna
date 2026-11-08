@@ -7,15 +7,20 @@
 <!--
   Metodická poznámka (pro učitele)
   3. ročník · Explore Together 1 · Unit 2 My favourite! – Lesson 1 a Lesson 2 (metodika ET1 PDF s. 37–39).
-  Samostatná práce na počítačích (10–15 min) nebo hra na interaktivní tabuli; funguje offline, myší i dotykem.
+  Hra na interaktivní tabuli pro celou třídu (13 dětí) – každé cvičení má 13 kol, takže se u tabule vystřídají všichni.
+  Funguje offline, dotykem i myší; jde použít i na počítačích.
   Slova L1: pizza, juice, onions, mushrooms, ham, peppers (+ opakování cheese, apples, tomatoes).
   L2: We've got … (True / False, jako Class Audio 32), What's missing? (jako Class Audio 31), I like … / I don't like … (PS s. 13),
       Lucky says: eat some salad, drink some juice.
-  4 cvičení (záložky), každé 8 kol, ⭐ za správně napoprvé. Počítač slova a věty čte britskou angličtinou (🔊, lze vypnout).
-  ★ Level 1 (základ): poslouchá / čte a kliká na obrázek nebo vybírá větu.
-  ★★ Level 2 (challenge): slova a věty píše sám (I don't like onions.) – pro děti, které už zvládají psaní.
-  🤝 Podpora: 💡 Help ukáže obrázkový slovníček a vzor věty; u psaní ukáže první písmena. Slabší dítě může sedět ve dvojici.
-  Na tabuli: k tabuli chodí děti po jednom, třída hlasuje palcem; za tiché sezení hvězdička pro celou třídu.
+  4 cvičení (záložky) po 13 kolech (jedno kolo = jeden hráč), jedno cvičení cca 6–8 min.
+  Průběh: nahoře svítí „Player 1 / 13“. Pořadí hráčů si určete předem (seznam na tabuli / losování), dítě přijde, odpoví, třída
+  ukáže palec nahoru / dolů, po správné odpovědi učitel ťukne „Next player ▶“ – další dítě přichází až teď (žádné předbíhání).
+  ⭐ dostane třída za správnou odpověď napoprvé; cíl: 13 / 13. Když hráč chybuje, zkouší znovu (nápověda na obrazovce),
+  třída nenapovídá nahlas – jinak se hvězdička nepočítá. Počítač slova a věty čte britskou angličtinou (🔊, lze vypnout).
+  ★ Level 1 (základ): poslouchá / čte a ťuká na obrázek nebo vybírá větu – pro většinu třídy.
+  ★★ Level 2 (challenge): slovo / větu napíše na klávesnici tabule (dotyková klávesnice Windows) – zdatné děti, expertka.
+     Úroveň lze přepnout i uprostřed hry (pořadí hráče zůstane) – např. pro jednoho zdatného hráče ★★, pak zpět ★.
+  🤝 Podpora: 💡 Help ukáže obrázkový slovníček a vzor věty; u psaní ukáže první písmena. Slabší dítě může jít k tabuli s „pomocníkem“.
   Pokyny pro děti anglicky, bez chráněných postav, bez textů písní.
 -->
 <style>
@@ -64,6 +69,9 @@
   .hint .w { display: inline-block; margin: 2px 8px; white-space: nowrap; }
   .like { color: var(--like); } .dislike { color: var(--dislike); }
   .end { text-align: center; font-size: clamp(22px, min(3.5vw, 6vh), 40px); font-weight: 800; }
+  .player { font-size: clamp(18px, min(2.4vw, 4vh), 26px); font-weight: 800; white-space: nowrap; background: var(--tab); color: #fff; border-radius: 14px; padding: 4px 12px; }
+  .locked .grid, .locked .choices:not(.nextrow), .locked form { pointer-events: none; }
+  .choice.nextp { background: var(--accent); border-color: var(--accent); color: #fff; }
   .say { border: 0; background: none; font-size: clamp(26px, min(4vw, 6vh), 44px); cursor: pointer; }
   @media (max-width: 600px) { body { height: auto; min-height: 100%; } }
 </style>
@@ -75,7 +83,8 @@
   <button class="btn" data-level="2">★★ Level 2</button>
   <button class="btn" id="hintBtn">💡 Help</button>
   <button class="btn" id="voiceBtn">🔊</button>
-  <span class="stars" id="stars">⭐ 0 / 8</span>
+  <span class="player" id="player">👤 Player 1 / 13</span>
+  <span class="stars" id="stars">⭐ 0 / 13</span>
 </header>
 <nav class="tabs">
   <button class="tab on" data-ex="words">1 · Food words</button>
@@ -108,7 +117,19 @@
   const pic = (k) => (FOOD[k].n > 1 ? `<span class="pl">${FOOD[k].ic.repeat(FOOD[k].n)}</span>` : FOOD[k].ic);
   const rnd = (n) => Math.floor(Math.random() * n);
   const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
-  const ROUNDS = 8;
+  const ROUNDS = 13; // 13 dětí ve třídě = 13 hráčů u tabule
+  // Balíček úloh dané délky: míchá pool dokola a hlídá, aby stejné slovo nešlo dvakrát po sobě.
+  function deck(pool, n) {
+    let out = [];
+    for (let attempt = 0; attempt < 500; attempt++) {
+      out = [];
+      while (out.length < n) out = out.concat(shuffle(pool));
+      out = out.slice(0, n);
+      if (out.every((x, i) => i === 0 || x !== out[i - 1])) break;
+    }
+    return out;
+  }
+  const REVIEW = ['cheese', 'apples', 'tomatoes'];
 
   // ---------- Hlas (britská angličtina, pokud je ve Windows) ----------
   let voiceOn = true, voice = null;
@@ -121,7 +142,10 @@
   }
 
   let level = 1, ex = 'words', round = 0, stars = 0, firstTry = true, tasks = [];
-  const updateStars = () => ($('#stars').textContent = `⭐ ${stars} / ${ROUNDS}`);
+  const updateStars = () => {
+    $('#stars').textContent = `⭐ ${stars} / ${ROUNDS}`;
+    $('#player').textContent = `👤 Player ${Math.min(round + 1, ROUNDS)} / ${ROUNDS}`;
+  };
   const help = () => `<div class="hint" id="hint">${ALL.map((k) => `<span class="w">${pic(k).replace(/<svg/, '<svg style="width:1.2em;height:1.2em;vertical-align:-.25em"')} ${k}</span>`).join('')}
     <br><b class="like">😊 I like pizza.</b> &nbsp; <b class="dislike">☹️ I don't like onions.</b> &nbsp; <b>We've got …</b></div>`;
   function msg(t, cls = '') { $('#msg').textContent = t; $('#msg').className = 'msg ' + cls; }
@@ -131,17 +155,20 @@
     updateStars();
     msg((firstTry ? '⭐ ' : '✓ ') + text, 'ok');
     speak(text);
-    round++;
-    setTimeout(next, 1900);
+    // Další hráč přichází až na pokyn učitele – obrazovka se zamkne, svítí jen „Next player ▶“.
+    $('#main').classList.add('locked');
+    const last = round + 1 >= ROUNDS;
+    $('#main').insertAdjacentHTML('beforeend', `<div class="choices nextrow"><button class="choice nextp" id="nextP">${last ? 'Finish 🎉' : 'Next player ▶'}</button></div>`);
+    $('#nextP').onclick = () => { round++; next(); };
   }
   const norm = (s) => s.toLowerCase().replace(/[’`´]/g, "'").replace(/do not/g, "don't").replace(/[.!?]/g, '').replace(/\s+/g, ' ').trim();
 
   // ---------- 1 · Food words (Lesson 1) ----------
-  function makeWords() { return shuffle([...NEW, ...shuffle(NEW).slice(0, 2)]).slice(0, ROUNDS); }
+  // 13 kol: všech 6 nových slov 2× + 1 slovo na opakování
+  function makeWords() { return deck([...NEW, ...NEW, shuffle(REVIEW)[0]], ROUNDS); }
   function renderWords(k) {
     if (level === 1) {
-      const opts = shuffle([k, ...shuffle(NEW.filter((x) => x !== k)).slice(0, 3), ...shuffle(['cheese', 'apples', 'tomatoes']).slice(0, 1)]).slice(0, 5);
-      if (!opts.includes(k)) opts[0] = k;
+      const opts = [k, ...shuffle([...NEW, ...REVIEW].filter((x) => x !== k)).slice(0, 4)];
       $('#main').innerHTML = `<div class="task">Listen and click! <button class="say" id="again" title="Listen again">🔊</button></div>
         <div class="grid" id="g">${shuffle(opts).map((w) => `<button class="pic" data-w="${w}"><span class="em">${pic(w)}</span><span class="lbl"></span></button>`).join('')}</div>
         <div class="msg" id="msg">Which picture is it?</div>${help()}`;
@@ -167,7 +194,7 @@
   }
 
   // ---------- 2 · What's missing? (Lesson 2, jako Class Audio 31) ----------
-  function makeMissing() { return Array.from({ length: ROUNDS }, (_, i) => NEW[i % 6]).sort(() => Math.random() - .5); }
+  function makeMissing() { return deck(NEW, ROUNDS); }
   function renderMissing(gone) {
     const row = NEW.filter((w) => w !== gone);
     const line = row.join(', ');
@@ -198,10 +225,8 @@
 
   // ---------- 3 · True or False? We've got … (Lesson 2, jako Class Audio 32) ----------
   function makeTF() {
-    return shuffle(ALL).slice(0, ROUNDS).map((k, i) => {
-      const t = i % 2 === 0;
-      return { k, said: t ? k : shuffle(ALL.filter((x) => x !== k))[0], t };
-    });
+    const truth = shuffle(Array.from({ length: ROUNDS }, (_, i) => i % 2 === 0)); // 7× True, 6× False
+    return deck(ALL, ROUNDS).map((k, i) => ({ k, said: truth[i] ? k : shuffle(ALL.filter((x) => x !== k))[0], t: truth[i] }));
   }
   function renderTF(task) {
     const s = `We've got ${task.said}.`;
@@ -219,7 +244,10 @@
   }
 
   // ---------- 4 · I like / I don't like (Lesson 2, PS s. 13) ----------
-  function makeLike() { return shuffle(ALL).slice(0, ROUNDS).map((k, i) => ({ k, like: i % 2 === 0 })).sort(() => Math.random() - .5); }
+  function makeLike() {
+    const likes = shuffle(Array.from({ length: ROUNDS }, (_, i) => i % 2 === 0));
+    return deck(ALL, ROUNDS).map((k, i) => ({ k, like: likes[i] }));
+  }
   const likeS = (t) => (t.like ? `I like ${t.k}.` : `I don't like ${t.k}.`);
   function renderLike(task) {
     const face = task.like ? '😊' : '☹️';
@@ -261,12 +289,16 @@
   function next() {
     if (round >= ROUNDS) return finish();
     firstTry = true;
+    $('#main').classList.remove('locked');
+    updateStars();
     EX[ex].render(tasks[round]);
   }
   function finish() {
     const order = ['words', 'missing', 'tf', 'like'];
     const nx = order[order.indexOf(ex) + 1];
-    $('#main').innerHTML = `<div class="end">🎉 Well done!<br>⭐ ${stars} / ${ROUNDS}<br><span style="font-size:.6em">Put your hand up and show your teacher.</span></div>
+    $('#main').classList.remove('locked');
+    $('#player').textContent = `👥 ${ROUNDS} / ${ROUNDS}`;
+    $('#main').innerHTML = `<div class="end">🎉 Well done, everybody!<br>⭐ ${stars} / ${ROUNDS}<br><span style="font-size:.6em">${stars === ROUNDS ? 'Perfect! 13 out of 13!' : 'Can we get 13 out of 13 next time?'}</span></div>
       <div class="choices"><button class="choice" id="again">🔁 Play again</button>${level === 1 ? '<button class="choice" id="up">★★ Try Level 2</button>' : ''}${nx ? '<button class="choice" id="nx">Next exercise ▶</button>' : ''}</div>`;
     speak('Well done!');
     $('#again').onclick = () => start(ex, level);
@@ -280,7 +312,14 @@
     updateStars();
     next();
   }
-  document.querySelectorAll('[data-level]').forEach((b) => (b.onclick = () => start(ex, Number(b.dataset.level))));
+  // Přepnutí úrovně uprostřed hry: hráč a hvězdičky zůstávají, jen se úloha ukáže v jiné úrovni.
+  document.querySelectorAll('[data-level]').forEach((b) => (b.onclick = () => {
+    const l = Number(b.dataset.level);
+    if (round >= ROUNDS) return start(ex, l);
+    level = l;
+    document.querySelectorAll('[data-level]').forEach((x) => x.classList.toggle('on', Number(x.dataset.level) === l));
+    if (!$('#main').classList.contains('locked')) next(); // po správné odpovědi platí nová úroveň až pro dalšího hráče
+  }));
   document.querySelectorAll('[data-ex]').forEach((b) => (b.onclick = () => start(b.dataset.ex, level)));
   $('#hintBtn').onclick = () => $('#hint')?.classList.toggle('show');
   $('#voiceBtn').onclick = () => { voiceOn = !voiceOn; $('#voiceBtn').textContent = voiceOn ? '🔊' : '🔇'; if (!voiceOn) speechSynthesis.cancel(); };
