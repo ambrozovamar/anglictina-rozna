@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My favourite food</title>
+<!--
+  Metodická poznámka (pro učitele)
+  3. ročník · Explore Together 1 · Unit 2 My favourite! – Lesson 1 a Lesson 2 (metodika ET1 PDF s. 37–39).
+  Samostatná práce na počítačích (10–15 min) nebo hra na interaktivní tabuli; funguje offline, myší i dotykem.
+  Slova L1: pizza, juice, onions, mushrooms, ham, peppers (+ opakování cheese, apples, tomatoes).
+  L2: We've got … (True / False, jako Class Audio 32), What's missing? (jako Class Audio 31), I like … / I don't like … (PS s. 13),
+      Lucky says: eat some salad, drink some juice.
+  4 cvičení (záložky), každé 8 kol, ⭐ za správně napoprvé. Počítač slova a věty čte britskou angličtinou (🔊, lze vypnout).
+  ★ Level 1 (základ): poslouchá / čte a kliká na obrázek nebo vybírá větu.
+  ★★ Level 2 (challenge): slova a věty píše sám (I don't like onions.) – pro děti, které už zvládají psaní.
+  🤝 Podpora: 💡 Help ukáže obrázkový slovníček a vzor věty; u psaní ukáže první písmena. Slabší dítě může sedět ve dvojici.
+  Na tabuli: k tabuli chodí děti po jednom, třída hlasuje palcem; za tiché sezení hvězdička pro celou třídu.
+  Pokyny pro děti anglicky, bez chráněných postav, bez textů písní.
+-->
+<style>
+  :root { --bg: #fff8ef; --ink: #2b1d12; --card: #fff; --line: #f0dcc4; --accent: #2f8f4e; --bad: #c0392b; --like: #2f8f4e; --dislike: #c0392b; --tab: #e8590c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1b1510; --ink: #f6eee6; --card: #2a211a; --line: #4a3b2e; } }
+  :root[data-theme="dark"] { --bg: #1b1510; --ink: #f6eee6; --card: #2a211a; --line: #4a3b2e; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 8px; padding: clamp(6px, 1.2vh, 10px) 14px; flex-wrap: wrap; }
+  header h1 { font-size: clamp(18px, min(2.4vw, 4vh), 26px); margin: 0 auto 0 0; }
+  .btn { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: clamp(5px, 1vh, 9px) 14px; font: inherit; font-weight: 700; cursor: pointer; min-height: 44px; }
+  .btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 14px clamp(4px, 1vh, 8px); }
+  .tab { border: 0; border-radius: 14px; padding: clamp(6px, 1.2vh, 10px) 14px; font: inherit; font-weight: 800; cursor: pointer; background: var(--card); color: var(--ink); min-height: 44px; box-shadow: 0 2px 5px rgba(0,0,0,.08); }
+  .tab.on { background: var(--tab); color: #fff; }
+  .stars { font-size: clamp(18px, min(2.4vw, 4vh), 26px); font-weight: 800; white-space: nowrap; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: clamp(8px, 1.8vh, 16px); padding: 0 14px 14px; min-height: 0; }
+  .task { font-size: clamp(20px, min(3.2vw, 5.4vh), 40px); font-weight: 800; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(128px, 28vw), 1fr)); gap: clamp(8px, 1.4vw, 16px); width: min(900px, 100%); }
+  .pic { background: var(--card); border: 3px solid var(--line); border-radius: 20px; padding: clamp(6px, 1.2vh, 12px); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font: inherit; color: var(--ink); }
+  .pic .em { font-size: clamp(40px, min(8vw, 13vh), 96px); line-height: 1.05; white-space: nowrap; }
+  .pic .em svg { width: 1em; height: 1em; vertical-align: -.12em; }
+  .pic .lbl { font-weight: 700; font-size: clamp(14px, min(1.8vw, 3vh), 20px); min-height: 1.2em; }
+  .pl { font-size: .62em; letter-spacing: -.12em; }
+  .cic { font-size: clamp(30px, min(5vw, 8vh), 60px); line-height: 1; }
+  .pic.ok { border-color: var(--accent); background: #d3f9d8; }
+  .pic.no { border-color: var(--bad); background: #ffe3e3; }
+  .pic.gap { border-style: dashed; cursor: default; }
+  .pic.gap .em { opacity: .15; }
+  .big { background: var(--card); border: 3px solid var(--line); border-radius: 24px; padding: clamp(8px, 1.6vh, 18px) clamp(18px, 3vw, 40px); display: flex; align-items: center; gap: clamp(10px, 2vw, 24px); }
+  .big .em { font-size: clamp(60px, min(12vw, 20vh), 150px); line-height: 1; white-space: nowrap; }
+  .big .em svg { width: 1em; height: 1em; vertical-align: -.12em; }
+  .face { font-size: clamp(50px, min(10vw, 16vh), 120px); line-height: 1; }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .choice { font: inherit; font-size: clamp(18px, min(2.8vw, 4.6vh), 34px); font-weight: 800; padding: clamp(8px, 1.4vh, 14px) clamp(14px, 2.2vw, 28px); border-radius: 16px; border: 3px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .choice:hover, .pic:hover { border-color: var(--accent); }
+  .choice.ok { background: #d3f9d8; border-color: var(--accent); color: #1b5e20; }
+  .choice.no { background: #ffe3e3; border-color: var(--bad); color: var(--bad); }
+  .type { display: flex; gap: 10px; width: min(760px, 100%); }
+  .type input { flex: 1; min-width: 0; font: inherit; font-size: clamp(20px, min(3vw, 5vh), 34px); padding: 10px 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--card); color: var(--ink); }
+  .msg { font-size: clamp(18px, min(2.6vw, 4.2vh), 30px); font-weight: 800; min-height: 1.3em; text-align: center; }
+  .msg.ok { color: var(--accent); } .msg.no { color: var(--bad); }
+  .hint { width: min(900px, 100%); background: #fff3bf; color: #5c4400; border-radius: 14px; padding: 8px 12px; font-size: clamp(14px, min(1.7vw, 2.8vh), 19px); display: none; text-align: center; }
+  .hint.show { display: block; }
+  .hint .w { display: inline-block; margin: 2px 8px; white-space: nowrap; }
+  .like { color: var(--like); } .dislike { color: var(--dislike); }
+  .end { text-align: center; font-size: clamp(22px, min(3.5vw, 6vh), 40px); font-weight: 800; }
+  .say { border: 0; background: none; font-size: clamp(26px, min(4vw, 6vh), 44px); cursor: pointer; }
+  @media (max-width: 600px) { body { height: auto; min-height: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍕 My favourite food</h1>
+  <button class="btn on" data-level="1">★ Level 1</button>
+  <button class="btn" data-level="2">★★ Level 2</button>
+  <button class="btn" id="hintBtn">💡 Help</button>
+  <button class="btn" id="voiceBtn">🔊</button>
+  <span class="stars" id="stars">⭐ 0 / 8</span>
+</header>
+<nav class="tabs">
+  <button class="tab on" data-ex="words">1 · Food words</button>
+  <button class="tab" data-ex="missing">2 · What's missing?</button>
+  <button class="tab" data-ex="tf">3 · True or False?</button>
+  <button class="tab" data-ex="like">4 · I like / I don't like</button>
+</nav>
+<main id="main"></main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const HAM = '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="54" rx="44" ry="34" fill="#f2a0b2"/><ellipse cx="50" cy="54" rx="44" ry="34" fill="none" stroke="#fff3f5" stroke-width="7"/><ellipse cx="50" cy="54" rx="47" ry="37" fill="none" stroke="#c2185b" stroke-width="2"/><ellipse cx="44" cy="50" rx="22" ry="15" fill="#f4a3b4"/><ellipse cx="66" cy="62" rx="10" ry="7" fill="#f4a3b4"/></svg>';
+  // Slova z Lesson 1 (nová) + opakování; ic = obrázek, n = kolikrát ho ukázat (množné číslo = víc kusů)
+  const FOOD = {
+    pizza:     { ic: '🍕', n: 1, l: 1 },
+    juice:     { ic: '🧃', n: 1, l: 1 },
+    onions:    { ic: '🧅', n: 2, l: 1 },
+    mushrooms: { ic: '🍄', n: 2, l: 1 },
+    ham:       { ic: HAM, n: 1, l: 1 },
+    peppers:   { ic: '🫑', n: 2, l: 1 },
+    cheese:    { ic: '🧀', n: 1, l: 0 },
+    apples:    { ic: '🍎', n: 2, l: 0 },
+    tomatoes:  { ic: '🍅', n: 2, l: 0 },
+    olives:    { ic: '🫒', n: 2, l: 0 },
+    milk:      { ic: '🥛', n: 1, l: 0 },
+    salad:     { ic: '🥗', n: 1, l: 0 },
+  };
+  const NEW = Object.keys(FOOD).filter((k) => FOOD[k].l);
+  const ALL = Object.keys(FOOD);
+  const pic = (k) => (FOOD[k].n > 1 ? `<span class="pl">${FOOD[k].ic.repeat(FOOD[k].n)}</span>` : FOOD[k].ic);
+  const rnd = (n) => Math.floor(Math.random() * n);
+  const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+  const ROUNDS = 8;
+
+  // ---------- Hlas (britská angličtina, pokud je ve Windows) ----------
+  let voiceOn = true, voice = null;
+  const pickVoice = () => { const v = speechSynthesis.getVoices(); voice = v.find((x) => x.lang === 'en-GB') || v.find((x) => x.lang.startsWith('en')) || null; };
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak(t) {
+    if (!voiceOn || !('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t); if (voice) u.voice = voice; u.lang = 'en-GB'; u.rate = .85; speechSynthesis.speak(u);
+  }
+
+  let level = 1, ex = 'words', round = 0, stars = 0, firstTry = true, tasks = [];
+  const updateStars = () => ($('#stars').textContent = `⭐ ${stars} / ${ROUNDS}`);
+  const help = () => `<div class="hint" id="hint">${ALL.map((k) => `<span class="w">${pic(k).replace(/<svg/, '<svg style="width:1.2em;height:1.2em;vertical-align:-.25em"')} ${k}</span>`).join('')}
+    <br><b class="like">😊 I like pizza.</b> &nbsp; <b class="dislike">☹️ I don't like onions.</b> &nbsp; <b>We've got …</b></div>`;
+  function msg(t, cls = '') { $('#msg').textContent = t; $('#msg').className = 'msg ' + cls; }
+  function wrong(el, tip) { firstTry = false; el.classList.add('no'); setTimeout(() => el.classList.remove('no'), 700); msg(tip, 'no'); speak('Try again!'); }
+  function right(text) {
+    if (firstTry) stars++;
+    updateStars();
+    msg((firstTry ? '⭐ ' : '✓ ') + text, 'ok');
+    speak(text);
+    round++;
+    setTimeout(next, 1900);
+  }
+  const norm = (s) => s.toLowerCase().replace(/[’`´]/g, "'").replace(/do not/g, "don't").replace(/[.!?]/g, '').replace(/\s+/g, ' ').trim();
+
+  // ---------- 1 · Food words (Lesson 1) ----------
+  function makeWords() { return shuffle([...NEW, ...shuffle(NEW).slice(0, 2)]).slice(0, ROUNDS); }
+  function renderWords(k) {
+    if (level === 1) {
+      const opts = shuffle([k, ...shuffle(NEW.filter((x) => x !== k)).slice(0, 3), ...shuffle(['cheese', 'apples', 'tomatoes']).slice(0, 1)]).slice(0, 5);
+      if (!opts.includes(k)) opts[0] = k;
+      $('#main').innerHTML = `<div class="task">Listen and click! <button class="say" id="again" title="Listen again">🔊</button></div>
+        <div class="grid" id="g">${shuffle(opts).map((w) => `<button class="pic" data-w="${w}"><span class="em">${pic(w)}</span><span class="lbl"></span></button>`).join('')}</div>
+        <div class="msg" id="msg">Which picture is it?</div>${help()}`;
+      speak(k); $('#again').onclick = () => speak(k);
+      $('#g').onclick = (e) => {
+        const b = e.target.closest('.pic'); if (!b) return;
+        if (b.dataset.w !== k) return wrong(b, `No, that's ${b.dataset.w}. Listen again!`);
+        b.classList.add('ok'); b.querySelector('.lbl').textContent = k; right(`Yes! ${k[0].toUpperCase() + k.slice(1)}.`);
+      };
+    } else {
+      $('#main').innerHTML = `<div class="big"><span class="em">${pic(k)}</span></div>
+        <form class="type" id="f"><input id="in" autocomplete="off" spellcheck="false" placeholder="Write the word"><button class="btn on">Check ✓</button></form>
+        <div class="msg" id="msg">What is it? Write the word.</div>${help()}`;
+      const inp = $('#in'); inp.focus();
+      let tries = 0;
+      $('#f').onsubmit = (e) => {
+        e.preventDefault();
+        if (norm(inp.value) === k) { inp.style.borderColor = 'var(--accent)'; return right(`${k[0].toUpperCase() + k.slice(1)} – well done!`); }
+        tries++; firstTry = false; inp.style.borderColor = 'var(--bad)';
+        msg(`Not yet. It starts with: ${k.slice(0, Math.min(k.length - 1, tries + 1))}…`, 'no');
+      };
+    }
+  }
+
+  // ---------- 2 · What's missing? (Lesson 2, jako Class Audio 31) ----------
+  function makeMissing() { return Array.from({ length: ROUNDS }, (_, i) => NEW[i % 6]).sort(() => Math.random() - .5); }
+  function renderMissing(gone) {
+    const row = NEW.filter((w) => w !== gone);
+    const line = row.join(', ');
+    $('#main').innerHTML = `<div class="task">Listen. What's missing? <button class="say" id="again" title="Listen again">🔊</button></div>
+      <div class="grid">${shuffle(NEW).map((w) => w === gone
+        ? `<div class="pic gap"><span class="em">❓</span><span class="lbl">?</span></div>`
+        : `<div class="pic"><span class="em">${pic(w)}</span><span class="lbl">${level === 1 ? w : ''}</span></div>`).join('')}</div>
+      ${level === 1
+        ? `<div class="choices" id="c">${shuffle(NEW).map((w) => `<button class="choice" data-w="${w}"><span class="cic">${pic(w).replace(/<svg/, '<svg style="width:1em;height:1em;vertical-align:-.15em"')}</span></button>`).join('')}</div>`
+        : `<form class="type" id="f"><input id="in" autocomplete="off" spellcheck="false" placeholder="Write the missing word"><button class="btn on">Check ✓</button></form>`}
+      <div class="msg" id="msg">${level === 1 ? 'Click the missing food!' : 'Write the missing food!'}</div>${help()}`;
+    speak(line); $('#again').onclick = () => speak(line);
+    if (level === 1) {
+      $('#c').onclick = (e) => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        if (b.dataset.w !== gone) return wrong(b, `${b.dataset.w[0].toUpperCase() + b.dataset.w.slice(1)} – it's in the picture. Look again!`);
+        b.classList.add('ok'); right(`${gone[0].toUpperCase() + gone.slice(1)} is missing!`);
+      };
+    } else {
+      const inp = $('#in'); inp.focus();
+      $('#f').onsubmit = (e) => {
+        e.preventDefault();
+        if (norm(inp.value).replace(/ is missing$/, '') === gone) return right(`${gone[0].toUpperCase() + gone.slice(1)} is missing!`);
+        firstTry = false; inp.style.borderColor = 'var(--bad)'; msg(`Not yet. It starts with: ${gone[0]}…`, 'no');
+      };
+    }
+  }
+
+  // ---------- 3 · True or False? We've got … (Lesson 2, jako Class Audio 32) ----------
+  function makeTF() {
+    return shuffle(ALL).slice(0, ROUNDS).map((k, i) => {
+      const t = i % 2 === 0;
+      return { k, said: t ? k : shuffle(ALL.filter((x) => x !== k))[0], t };
+    });
+  }
+  function renderTF(task) {
+    const s = `We've got ${task.said}.`;
+    $('#main').innerHTML = `<div class="big"><span class="em">${pic(task.k)}</span></div>
+      <div class="task">${level === 1 ? `<span>${s}</span>` : '<span>Listen!</span>'} <button class="say" id="again" title="Listen again">🔊</button></div>
+      <div class="choices" id="c"><button class="choice" data-a="1">✔ True</button><button class="choice" data-a="0">✘ False</button></div>
+      <div class="msg" id="msg">Look, listen and say: True or False?</div>${help()}`;
+    speak(s); $('#again').onclick = () => speak(s);
+    $('#c').onclick = (e) => {
+      const b = e.target.closest('.choice'); if (!b) return;
+      if ((b.dataset.a === '1') !== task.t) return wrong(b, task.t ? `Look – it IS ${task.k}!` : `Look – it isn't ${task.said}. It's ${task.k}!`);
+      b.classList.add('ok');
+      right(task.t ? `True! We've got ${task.k}.` : `False! We've got ${task.k}.`);
+    };
+  }
+
+  // ---------- 4 · I like / I don't like (Lesson 2, PS s. 13) ----------
+  function makeLike() { return shuffle(ALL).slice(0, ROUNDS).map((k, i) => ({ k, like: i % 2 === 0 })).sort(() => Math.random() - .5); }
+  const likeS = (t) => (t.like ? `I like ${t.k}.` : `I don't like ${t.k}.`);
+  function renderLike(task) {
+    const face = task.like ? '😊' : '☹️';
+    if (level === 1) {
+      const wrongK = shuffle(ALL.filter((x) => x !== task.k))[0];
+      const opts = shuffle([likeS(task), likeS({ k: task.k, like: !task.like }), likeS({ k: wrongK, like: task.like })]);
+      $('#main').innerHTML = `<div class="big"><span class="face">${face}</span><span class="em">${pic(task.k)}</span></div>
+        <div class="choices" id="c">${opts.map((o) => `<button class="choice" data-s="${o}">${o}</button>`).join('')}</div>
+        <div class="msg" id="msg">Look at the face and the food. Choose the sentence!</div>${help()}`;
+      $('#c').onclick = (e) => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        if (b.dataset.s !== likeS(task)) return wrong(b, b.dataset.s.includes(task.k) ? `Look at the face: ${face} → ${task.like ? 'I like' : "I don't like"} …` : 'Look at the food again!');
+        b.classList.add('ok'); right(likeS(task));
+      };
+    } else {
+      $('#main').innerHTML = `<div class="big"><span class="face">${face}</span><span class="em">${pic(task.k)}</span></div>
+        <form class="type" id="f"><input id="in" autocomplete="off" spellcheck="false" placeholder="Write: I like … / I don't like …"><button class="btn on">Check ✓</button></form>
+        <div class="msg" id="msg">Write the sentence. 😊 = I like …  ☹️ = I don't like …</div>${help()}`;
+      const inp = $('#in'); inp.focus();
+      $('#f').onsubmit = (e) => {
+        e.preventDefault();
+        const v = norm(inp.value);
+        if (v === norm(likeS(task))) { inp.style.borderColor = 'var(--accent)'; return right(likeS(task)); }
+        firstTry = false; inp.style.borderColor = 'var(--bad)';
+        if (task.like && v.includes("don't")) msg('Look at the face 😊 → I like …', 'no');
+        else if (!task.like && !v.includes("don't")) msg("Look at the face ☹️ → I don't like …", 'no');
+        else if (!v.endsWith(task.k)) msg(`Check the food word: ${task.k.slice(0, 2)}…`, 'no');
+        else msg('Almost! Check the spelling.', 'no');
+      };
+    }
+  }
+
+  const EX = {
+    words: { make: makeWords, render: renderWords },
+    missing: { make: makeMissing, render: renderMissing },
+    tf: { make: makeTF, render: renderTF },
+    like: { make: makeLike, render: renderLike },
+  };
+  function next() {
+    if (round >= ROUNDS) return finish();
+    firstTry = true;
+    EX[ex].render(tasks[round]);
+  }
+  function finish() {
+    const order = ['words', 'missing', 'tf', 'like'];
+    const nx = order[order.indexOf(ex) + 1];
+    $('#main').innerHTML = `<div class="end">🎉 Well done!<br>⭐ ${stars} / ${ROUNDS}<br><span style="font-size:.6em">Put your hand up and show your teacher.</span></div>
+      <div class="choices"><button class="choice" id="again">🔁 Play again</button>${level === 1 ? '<button class="choice" id="up">★★ Try Level 2</button>' : ''}${nx ? '<button class="choice" id="nx">Next exercise ▶</button>' : ''}</div>`;
+    speak('Well done!');
+    $('#again').onclick = () => start(ex, level);
+    $('#up')?.addEventListener('click', () => start(ex, 2));
+    $('#nx')?.addEventListener('click', () => start(nx, level));
+  }
+  function start(e, l) {
+    ex = e; level = l; round = 0; stars = 0; tasks = EX[ex].make();
+    document.querySelectorAll('[data-level]').forEach((b) => b.classList.toggle('on', Number(b.dataset.level) === l));
+    document.querySelectorAll('[data-ex]').forEach((b) => b.classList.toggle('on', b.dataset.ex === e));
+    updateStars();
+    next();
+  }
+  document.querySelectorAll('[data-level]').forEach((b) => (b.onclick = () => start(ex, Number(b.dataset.level))));
+  document.querySelectorAll('[data-ex]').forEach((b) => (b.onclick = () => start(b.dataset.ex, level)));
+  $('#hintBtn').onclick = () => $('#hint')?.classList.toggle('show');
+  $('#voiceBtn').onclick = () => { voiceOn = !voiceOn; $('#voiceBtn').textContent = voiceOn ? '🔊' : '🔇'; if (!voiceOn) speechSynthesis.cancel(); };
+  window.__food = { start, get state() { return { ex, level, round, stars, tasks }; } };
+  start('words', 1);
+})();
+</script>
+</body>
+</html>
