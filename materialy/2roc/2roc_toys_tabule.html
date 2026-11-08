@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toys – Toy Box</title>
+<!--
+  Metodická poznámka (pro učitele)
+  2. ročník · Let's Explore 1 · Unit 2 Toys (metodika LE1 PDF s. 32–37): scooter, bike, ball, guitar, doll, car;
+  It's a … / I've got a … (hodina 2–3, „mystery bag“), big / small / old / new (hodina 5).
+  Hra na interaktivní tabuli pro 5 dětí; funguje offline, dotykem i myší; počítač mluví britskou angličtinou (🔊, lze vypnout).
+  Každé dítě má zvířátko (🐶 🐱 🐰 🐻 🦊 – rozdejte předem, každý si ho pamatuje). Hra má 10 kol = každý jde k tabuli 2×,
+  pořadí určuje počítač (svítí zvířátko, které je na řadě). Po odpovědi učitel ťukne „Next ▶“ – teprve pak jde další.
+  Za správně napoprvé dostane dítě ⭐ a hračka letí do společné krabice – cíl: 10 hraček v krabici (spolupráce, ne soupeření).
+  Cvičení (záložky), každé 3–5 min – krátké, střídat s pohybem (5. hodina, nižší pozornost):
+    1 Listen and find – počítač řekne „It's a doll.“, dítě ťukne na hračku.
+    2 What's missing? – všichni zavřou oči, jedna hračka zmizí, dítě ji najde dole a nahlas řekne.
+    3 Mystery bag – v pytlíku je hračka, kouká jen kousek. Dítě řekne „I've got a car!“, učitel ťukne ✔ / ✘. (mluvení)
+    4 Big, small, old, new – hračka je velká / malá / stará / nová, dítě vybere slovo (až po hodině 5).
+  ★ Level 1: poslech + obrázky (pro všechny). ★★ Level 2: čtení – místo hlasu se ukáže napsané slovo / věta,
+     v Mystery bag celá věta. Úroveň jde přepnout pro jedno dítě (nadaná dívka) a pak zpět.
+  🤝 Podpora (dívka, která se zapojuje méně): smí jen ťuknout; učitel ji pochválí za zopakování slova. Kluci: pravidlo
+     „k tabuli jde jen ten, jehož zvířátko svítí; ostatní sedí – jinak zvířátko nedostane hvězdu“.
+  Vlastní grafika (emoji + jednoduchá kresba panenky), bez chráněných postav a textů písní.
+-->
+<style>
+  :root { --bg: #fff4e6; --ink: #3b2414; --card: #fff; --line: #ffd8a8; --ok: #2f9e44; --bad: #e03131; --hi: #f76707; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; user-select: none; }
+  header { display: flex; align-items: center; gap: 8px; padding: clamp(6px, 1.2vh, 10px) 14px; flex-wrap: wrap; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  header h1 { font-size: clamp(18px, min(2.4vw, 4vh), 26px); margin: 0 auto 0 0; }
+  .btn { border: 2px solid var(--line); background: var(--card); color: var(--ink); border-radius: 14px; padding: clamp(5px, 1vh, 9px) 14px; font: inherit; font-weight: 700; cursor: pointer; min-height: 44px; }
+  .btn.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: clamp(6px, 1.2vh, 10px) 14px 0; }
+  .tab { border: 0; border-radius: 14px; padding: clamp(6px, 1.2vh, 10px) 14px; font: inherit; font-weight: 800; cursor: pointer; background: var(--card); color: var(--ink); min-height: 44px; box-shadow: 0 2px 5px rgba(0,0,0,.08); }
+  .tab.on { background: var(--hi); color: #fff; }
+  .kids { display: flex; gap: clamp(6px, 1.2vw, 14px); justify-content: center; padding: clamp(6px, 1.2vh, 10px) 14px 0; flex-wrap: wrap; }
+  .kid { display: flex; align-items: center; gap: 6px; background: var(--card); border: 4px solid transparent; border-radius: 22px; padding: 2px 12px; font-weight: 800; font-size: clamp(16px, min(2vw, 3.4vh), 24px); }
+  .kid .a { font-size: 1.7em; line-height: 1; }
+  .kid.now { border-color: var(--hi); transform: scale(1.12); box-shadow: 0 4px 12px rgba(247,103,7,.35); }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: clamp(8px, 1.6vh, 14px); padding: 8px 14px 14px; min-height: 0; }
+  .task { font-size: clamp(22px, min(3.6vw, 6vh), 46px); font-weight: 800; text-align: center; display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .word { background: #fff; border: 3px dashed var(--hi); border-radius: 16px; padding: 2px 18px; }
+  .shelf { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(6px, 1.2vw, 14px); width: min(1100px, 100%); }
+  .toy { background: var(--card); border: 4px solid var(--line); border-radius: 22px; cursor: pointer; font: inherit; color: var(--ink); padding: clamp(4px, 1vh, 10px) 4px; display: flex; flex-direction: column; align-items: center; transition: opacity .4s, transform .2s; }
+  .toy .em { font-size: clamp(44px, min(8.5vw, 15vh), 120px); line-height: 1.05; height: 1.05em; display: flex; align-items: center; }
+  .toy .em svg, .bag svg.doll { width: 1em; height: 1em; }
+  .toy .lbl { font-weight: 800; font-size: clamp(14px, min(1.8vw, 3vh), 22px); min-height: 1.3em; }
+  .toy.ok { border-color: var(--ok); background: #d3f9d8; transform: scale(1.06); }
+  .toy.no { border-color: var(--bad); background: #ffe3e3; }
+  .toy.gone { opacity: 0; transform: scale(.3); pointer-events: none; }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .choice { font: inherit; font-size: clamp(20px, min(3vw, 5vh), 38px); font-weight: 800; padding: clamp(8px, 1.4vh, 14px) clamp(16px, 2.2vw, 30px); border-radius: 18px; border: 3px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .choice .em { font-size: 1.2em; line-height: 1; }
+  .choice .em.big { font-size: 2em; }
+  .choice.ok { background: #d3f9d8; border-color: var(--ok); }
+  .choice.no { background: #ffe3e3; border-color: var(--bad); }
+  .choice.go { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .choice.stop { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .stage { width: min(900px, 100%); flex: 1 1 auto; min-height: 0; max-height: 46vh; display: flex; align-items: center; justify-content: center; gap: 4vw; background: var(--card); border-radius: 26px; border: 3px solid var(--line); position: relative; overflow: hidden; }
+  .bag { position: relative; width: clamp(150px, min(26vw, 40vh), 320px); height: clamp(150px, min(26vw, 40vh), 320px); }
+  .bag .peek { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); font-size: clamp(60px, min(13vw, 20vh), 160px); line-height: 1; transition: top .6s, clip-path .6s; clip-path: inset(0 0 58% 0); }
+  .bag.open .peek { top: -2%; clip-path: inset(0 0 0 0); z-index: 3; }
+  .bag .sack { position: absolute; inset: 22% 0 0 0; z-index: 2; }
+  .bag.shake .sack { animation: shake .5s; }
+  @keyframes shake { 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+  .adj { font-size: clamp(50px, min(10vw, 17vh), 140px); line-height: 1; position: relative; display: inline-block; transition: font-size .3s; }
+  .adj.small { font-size: clamp(26px, min(4.5vw, 8vh), 60px); }
+  .adj.big { font-size: clamp(90px, min(17vw, 28vh), 230px); }
+  .adj.old { filter: grayscale(.85) sepia(.6) brightness(.85); }
+  .adj.old::after { content: "🕸️"; position: absolute; right: -.25em; top: -.2em; font-size: .45em; filter: none; }
+  .adj.new::after { content: "✨"; position: absolute; right: -.35em; top: -.25em; font-size: .45em; }
+  .msg { font-size: clamp(18px, min(2.6vw, 4.2vh), 32px); font-weight: 800; min-height: 1.3em; text-align: center; }
+  .msg.ok { color: var(--ok); } .msg.no { color: var(--bad); }
+  .box { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: clamp(16px, min(2vw, 3.4vh), 24px); }
+  .box .in { min-width: 12em; min-height: 1.6em; background: #e8c39e; border: 3px solid #a0522d; border-radius: 0 0 14px 14px; padding: 2px 8px; letter-spacing: 2px; }
+  .locked .shelf, .locked .choices:not(.nextrow) { pointer-events: none; }
+  .end { text-align: center; font-size: clamp(24px, min(3.6vw, 6vh), 44px); font-weight: 800; }
+  @media (max-width: 700px) { body { height: auto; min-height: 100%; } .shelf { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧸 Toys – Toy Box</h1>
+  <button class="btn on" data-level="1">★ Level 1</button>
+  <button class="btn" data-level="2">★★ Level 2</button>
+  <button class="btn" id="voiceBtn">🔊</button>
+  <div class="box">📦 <span class="in" id="box"></span> <span id="boxN">0 / 10</span></div>
+</header>
+<nav class="tabs">
+  <button class="tab on" data-ex="find">1 · Listen and find</button>
+  <button class="tab" data-ex="missing">2 · What's missing?</button>
+  <button class="tab" data-ex="bag">3 · Mystery bag</button>
+  <button class="tab" data-ex="adj">4 · Big, small, old, new</button>
+</nav>
+<div class="kids" id="kids"></div>
+<main id="main"></main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+  const DOLL = '<svg class="doll" viewBox="0 0 100 100"><path d="M30 30 Q50 2 70 30 L74 56 Q50 48 26 56 Z" fill="#c2410c"/><circle cx="50" cy="34" r="17" fill="#ffd8b5"/><circle cx="44" cy="33" r="2.4" fill="#3b2414"/><circle cx="56" cy="33" r="2.4" fill="#3b2414"/><path d="M44 40 q6 5 12 0" stroke="#e03131" stroke-width="2.4" fill="none"/><circle cx="40" cy="39" r="3" fill="#ffa8a8"/><circle cx="60" cy="39" r="3" fill="#ffa8a8"/><path d="M50 50 L28 92 L72 92 Z" fill="#e64980"/><circle cx="50" cy="66" r="3" fill="#fff"/><circle cx="46" cy="78" r="3" fill="#fff"/><circle cx="56" cy="80" r="3" fill="#fff"/><rect x="40" y="91" width="7" height="8" rx="3" fill="#ffd8b5"/><rect x="53" y="91" width="7" height="8" rx="3" fill="#ffd8b5"/></svg>';
+  const TOYS = { scooter: '🛴', bike: '🚲', ball: '⚽', guitar: '🎸', doll: DOLL, car: '🚗' };
+  const KEYS = Object.keys(TOYS);
+  const KIDS = ['🐶', '🐱', '🐰', '🐻', '🦊'];
+  const ROUNDS = 10; // 5 dětí × 2
+
+  // ---------- Hlas ----------
+  let voiceOn = true, voice = null;
+  const pickVoice = () => { const v = speechSynthesis.getVoices(); voice = v.find((x) => x.lang === 'en-GB') || v.find((x) => x.lang.startsWith('en')) || null; };
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak(t) {
+    if (!voiceOn || !('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t); if (voice) u.voice = voice; u.lang = 'en-GB'; u.rate = .8; speechSynthesis.speak(u);
+  }
+
+  let level = 1, ex = 'find', round = 0, firstTry = true, tasks = [], box = [], kidStars = [0, 0, 0, 0, 0];
+  const kid = () => round % 5;
+  function drawKids() {
+    $('#kids').innerHTML = KIDS.map((k, i) => `<div class="kid ${i === kid() && round < ROUNDS ? 'now' : ''}"><span class="a">${k}</span>${'⭐'.repeat(kidStars[i]) || '·'}</div>`).join('');
+    $('#box').innerHTML = box.map((t) => (t === 'doll' ? DOLL.replace('class="doll"', 'style="width:1em;height:1em;vertical-align:-.15em"') : TOYS[t])).join('');
+    $('#boxN').textContent = `${box.length} / ${ROUNDS}`;
+  }
+  function msg(t, cls = '') { $('#msg').textContent = t; $('#msg').className = 'msg ' + cls; }
+  function wrong(el, tip) { firstTry = false; el.classList.add('no'); setTimeout(() => el.classList.remove('no'), 700); msg(tip, 'no'); speak('Try again!'); }
+  function right(text, toy) {
+    if (firstTry) { kidStars[kid()]++; box.push(toy); }
+    drawKids();
+    msg((firstTry ? '⭐ ' : '✓ ') + text, 'ok');
+    speak(text);
+    $('#main').classList.add('locked');
+    const nextKid = KIDS[(kid() + 1) % 5];
+    $('#main').insertAdjacentHTML('beforeend', `<div class="choices nextrow"><button class="choice go" id="nextP">${round + 1 >= ROUNDS ? 'Finish 🎉' : `Next ${nextKid} ▶`}</button></div>`);
+    $('#nextP').onclick = () => { round++; next(); };
+  }
+  const toyHtml = (k, label) => `<button class="toy" data-k="${k}"><span class="em">${TOYS[k]}</span><span class="lbl">${label ? k : ''}</span></button>`;
+  // 10 úloh: každá hračka aspoň 1×, nikdy 2× po sobě
+  function deck(pool, n) {
+    let out = [];
+    for (let a = 0; a < 500; a++) {
+      out = [];
+      while (out.length < n) out = out.concat(shuffle(pool));
+      out = out.slice(0, n);
+      if (out.every((x, i) => i === 0 || x !== out[i - 1])) break;
+    }
+    return out;
+  }
+
+  // ---------- 1 Listen and find ----------
+  function rFind(k) {
+    const s = `It's a ${k}.`;
+    $('#main').innerHTML = `<div class="task">${level === 1 ? 'Listen and find! <button class="btn" id="again">🔊 Again</button>' : `Read and find: <span class="word">${s}</span>`}</div>
+      <div class="shelf" id="sh">${shuffle(KEYS).map((t) => toyHtml(t, false)).join('')}</div>
+      <div class="msg" id="msg">${KIDS[kid()]} Tap the toy!</div>`;
+    if (level === 1) { speak(s); $('#again').onclick = () => speak(s); }
+    $('#sh').onclick = (e) => {
+      const b = e.target.closest('.toy'); if (!b) return;
+      if (b.dataset.k !== k) return wrong(b, `That's a ${b.dataset.k}. Try again!`);
+      b.classList.add('ok'); b.querySelector('.lbl').textContent = k; right(`Yes! It's a ${k}!`, k);
+    };
+  }
+  // ---------- 2 What's missing? ----------
+  function rMissing(k) {
+    const order = shuffle(KEYS);
+    $('#main').innerHTML = `<div class="task">Look! 👀 Then close your eyes.</div>
+      <div class="shelf" id="sh">${order.map((t) => toyHtml(t, level === 1)).join('')}</div>
+      <div class="choices" id="c"><button class="choice go" id="close">🙈 Close your eyes!</button></div>
+      <div class="msg" id="msg">${KIDS[kid()]} Look at the toys.</div>`;
+    speak('Look at the toys.');
+    $('#close').onclick = () => {
+      speak('Close your eyes!');
+      setTimeout(() => {
+        document.querySelector(`#sh .toy[data-k="${k}"]`).classList.add('gone');
+        $('#c').innerHTML = `<button class="choice" id="open">👀 Open your eyes! What's missing?</button>`;
+        $('#open').onclick = () => {
+          speak("Open your eyes! What's missing?");
+          document.querySelector('.task').textContent = "Open your eyes! What's missing? 🤔";
+          $('#c').innerHTML = shuffle(KEYS).map((t) => `<button class="choice" data-k="${t}"><span class="em big">${t === 'doll' ? DOLL.replace('class="doll"', 'style="width:1.2em;height:1.2em"') : TOYS[t]}</span>${level === 2 ? t : ''}</button>`).join('');
+          msg('Tap the missing toy and say it!');
+          $('#c').onclick = (e) => {
+            const b = e.target.closest('.choice'); if (!b || !b.dataset.k) return;
+            if (b.dataset.k !== k) return wrong(b, `No, the ${b.dataset.k} is there. Look again!`);
+            b.classList.add('ok');
+            document.querySelector(`#sh .toy[data-k="${k}"]`).classList.remove('gone');
+            right(`The ${k} is missing!`, k);
+          };
+        };
+      }, 1200);
+    };
+  }
+  // ---------- 3 Mystery bag (mluvení, učitel potvrdí) ----------
+  const SACK = '<svg class="sack" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M18 8 Q50 22 82 8 L94 86 Q50 104 6 86 Z" fill="#c8a06e"/><path d="M18 8 Q50 22 82 8" stroke="#8a5a2b" stroke-width="5" fill="none"/><text x="50" y="66" font-size="30" text-anchor="middle" fill="#8a5a2b" font-weight="800">?</text></svg>';
+  function rBag(k) {
+    $('#main').innerHTML = `<div class="task">What's in the bag? <span class="word">${level === 1 ? "I've got a …" : "Say: I've got a …!"}</span></div>
+      <div class="stage"><div class="bag shake" id="bag"><span class="peek">${TOYS[k]}</span>${SACK}</div></div>
+      <div class="choices" id="c"><button class="choice go" data-v="1">✔ Yes!</button><button class="choice stop" data-v="0">✘ Try again</button><button class="choice" id="peek">👀 Peek more</button></div>
+      <div class="msg" id="msg">${KIDS[kid()]} Feel the bag… and say: I've got a …!</div>`;
+    speak("What's in the bag?");
+    $('#bag').onclick = () => { $('#bag').classList.remove('shake'); void $('#bag').offsetWidth; $('#bag').classList.add('shake'); };
+    $('#peek').onclick = () => { firstTry = false; $('#bag .peek').style.clipPath = 'inset(0 0 30% 0)'; msg('Look again – what is it?'); };
+    $('#c').onclick = (e) => {
+      const b = e.target.closest('[data-v]'); if (!b) return;
+      if (b.dataset.v === '0') return wrong(b, 'Not quite – try again!');
+      $('#bag').classList.add('open');
+      right(`I've got a ${k}!`, k);
+    };
+  }
+  // ---------- 4 Big, small, old, new ----------
+  const ADJ = { big: '🐘', small: '🐭', old: '🕸️', new: '✨' };
+  function makeAdj() {
+    const adjs = deck(['big', 'small', 'old', 'new'], ROUNDS);
+    const toys = deck(KEYS, ROUNDS);
+    return adjs.map((a, i) => ({ a, k: toys[i] }));
+  }
+  function rAdj(t) {
+    const pairs = t.a === 'big' || t.a === 'small' ? ['big', 'small'] : ['old', 'new'];
+    const opts = level === 1 ? pairs : ['big', 'small', 'old', 'new'];
+    $('#main').innerHTML = `<div class="task">${level === 1 ? 'Is it big or small? Old or new?' : 'Look and choose!'}</div>
+      <div class="stage"><span class="adj ${t.a}">${t.k === 'doll' ? DOLL.replace('class="doll"', 'style="width:1em;height:1em"') : TOYS[t.k]}</span></div>
+      <div class="choices" id="c">${opts.map((a) => `<button class="choice" data-a="${a}">${level === 1 ? `<span class="em">${ADJ[a]}</span>` : ''}${a}</button>`).join('')}</div>
+      <div class="msg" id="msg">${KIDS[kid()]} What is it like?</div>`;
+    speak(`Look at the ${t.k}.`);
+    $('#c').onclick = (e) => {
+      const b = e.target.closest('.choice'); if (!b) return;
+      if (b.dataset.a !== t.a) return wrong(b, 'Look again!');
+      b.classList.add('ok'); right(`It's ${t.a}! It's a ${t.a} ${t.k}.`, t.k);
+    };
+  }
+
+  const EX = {
+    find: { make: () => deck(KEYS, ROUNDS), render: rFind },
+    missing: { make: () => deck(KEYS, ROUNDS), render: rMissing },
+    bag: { make: () => deck(KEYS, ROUNDS), render: rBag },
+    adj: { make: makeAdj, render: rAdj },
+  };
+  function next() {
+    if (round >= ROUNDS) return finish();
+    firstTry = true;
+    $('#main').classList.remove('locked');
+    drawKids();
+    EX[ex].render(tasks[round]);
+  }
+  function finish() {
+    drawKids();
+    $('#main').classList.remove('locked');
+    const full = box.length === ROUNDS;
+    $('#main').innerHTML = `<div class="end">${full ? '🎉 The toy box is full!' : `🎉 ${box.length} toys in the box!`}<br>
+      <span style="font-size:1.4em">${KIDS.join(' ')}</span><br>Well done, everybody! Goodbye! 👋</div>
+      <div class="choices"><button class="choice go" id="again">🔁 Play again</button></div>`;
+    speak(full ? 'The toy box is full! Well done, everybody!' : 'Well done, everybody!');
+    $('#again').onclick = () => start(ex);
+  }
+  function start(e) {
+    ex = e; round = 0; box = []; kidStars = [0, 0, 0, 0, 0]; tasks = EX[ex].make();
+    document.querySelectorAll('[data-ex]').forEach((b) => b.classList.toggle('on', b.dataset.ex === e));
+    next();
+  }
+  document.querySelectorAll('[data-ex]').forEach((b) => (b.onclick = () => start(b.dataset.ex)));
+  document.querySelectorAll('[data-level]').forEach((b) => (b.onclick = () => {
+    level = Number(b.dataset.level);
+    document.querySelectorAll('[data-level]').forEach((x) => x.classList.toggle('on', x === b));
+    if (round < ROUNDS && !$('#main').classList.contains('locked')) next(); // jinak platí pro další dítě
+  }));
+  $('#voiceBtn').onclick = () => { voiceOn = !voiceOn; $('#voiceBtn').textContent = voiceOn ? '🔊' : '🔇'; if (!voiceOn) speechSynthesis.cancel(); };
+  window.__toys = { start, get state() { return { ex, level, round, tasks, box, kidStars }; } };
+  start('find');
+})();
+</script>
+</body>
+</html>
