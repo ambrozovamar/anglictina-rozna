@@ -24,6 +24,15 @@
   .w { font-size: 22pt; font-weight: 700; margin-top: 1mm; letter-spacing: .5px; }
   .mice { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6mm; margin-top: 4mm; }
   .mice div { border: 1.5px dashed #888; border-radius: 4mm; padding: 3mm; text-align: center; }
+  /* Strana 1: 10 domečků ve 3 řadách (4 + 4 + 2 na střed) */
+  .sheet { display: flex; flex-wrap: wrap; justify-content: center; gap: 4mm 8mm; }
+  .sheet .h { width: calc((100% - 3 * 8mm) / 4); }
+  .sheet .h svg { height: 34mm; width: auto; max-width: 100%; }
+  .sheet .w { font-size: 20pt; }
+  .cutout { margin: 5mm auto 0; width: 84mm; border: 2px dashed #555; border-radius: 6mm; padding: 3mm 4mm 2mm; text-align: center; position: relative; }
+  .cutout .sc { position: absolute; top: -4.2mm; left: 6mm; background: #fff; padding: 0 1.5mm; font-size: 13pt; line-height: 1; }
+  .cutout svg { width: 74mm; height: auto; }
+  .cutout .w { font-size: 16pt; margin-top: 0; }
   .note { font-size: 10pt; }
   .note li { margin-bottom: 1.5mm; }
   .muted { color: var(--muted); }
@@ -38,9 +47,10 @@
 <section class="page">
   <h1>Read and colour. 🖍</h1>
   <div class="name">Name: ..............................................</div>
-  <div class="grid g3" id="sheet"></div>
-  <h2>Where's the mouse? Draw the mouse in one house. 🐭</h2>
-  <p class="muted" style="font-size:10pt">Show your friend: „Little mouse, little mouse, are you in the … house?“</p>
+  <div class="sheet" id="sheet"></div>
+  <h2>Cut out the mouse. ✂ Hide it in a house. 🐭</h2>
+  <p class="muted" style="font-size:10pt;margin:0">Ask your friend: „Little mouse, little mouse, are you in the … house?“</p>
+  <div class="cutout"><span class="sc">✂</span><div id="cutMouse"></div><div class="w">mouse</div></div>
 </section>
 
 <!-- Strana 2: domečky pro hru na koberci -->
@@ -66,7 +76,8 @@
   <h2>Pracovní list Read and colour</h2>
   <ul>
     <li>První setkání s psanou podobou: dítě přečte (s pomocí) slovo a domeček vybarví. Nejdřív společně ukázat a přečíst nahlas.</li>
-    <li>Kdo je hotový: nakreslí do jednoho domečku myšku a soused hádá „Are you in the … house?“</li>
+    <li>10 domečků (red, blue, green, yellow, pink, orange, purple, black, brown, white). White domeček se nevybarvuje – dítě ho jen obtáhne nebo dokreslí bílé okno.</li>
+    <li>Kdo je hotový: vybarví a vystřihne myšku dole na listu (rámeček ✂), schová ji pod jeden domeček a soused hádá „Little mouse, little mouse, are you in the … house?“ Myšku si nechají v obálce / sešitě na další hru.</li>
   </ul>
   <h2>Diferenciace</h2>
   <ul>
@@ -75,7 +86,7 @@
     <li><b>🤝 Podpora:</b> učitel u slova ukáže pastelku správné barvy; dítě v hře stačí, když řekne barvu.</li>
   </ul>
   <h2>Řešení</h2>
-  <p>red – červená · blue – modrá · green – zelená · yellow – žlutá · pink – růžová · orange – oranžová</p>
+  <p>red – červená · blue – modrá · green – zelená · yellow – žlutá · pink – růžová · orange – oranžová · purple – fialová · black – černá · brown – hnědá · white – bílá</p>
   <p class="muted">Vlastní ilustrace, bez chráněných postav. Text „Little mouse, little mouse…“ je tradiční dětská říkanka-hra.</p>
 </section>
 
@@ -88,7 +99,7 @@
       <rect x="25" y="48" width="13" height="11" fill="#fff" stroke="#222" stroke-width="2"/>
       <rect x="62" y="48" width="13" height="11" fill="#fff" stroke="#222" stroke-width="2"/>
     </svg>`;
-  const sheet = ['red', 'blue', 'green', 'yellow', 'pink', 'orange'];
+  const sheet = ['red', 'blue', 'green', 'yellow', 'pink', 'orange', 'purple', 'black', 'brown', 'white'];
   document.getElementById('sheet').innerHTML = sheet.map((c) => `<div class="h">${house('#fff')}<div class="w">${c}</div></div>`).join('');
   const COL = { red: '#e53935', pink: '#f06292', blue: '#1e88e5', green: '#43a047', yellow: '#fdd835', orange: '#fb8c00', purple: '#8e24aa', brown: '#8d6e63', black: '#263238', white: '#ffffff' };
   document.getElementById('game').innerHTML = Object.entries(COL).map(([c, v]) => `<div class="h">${house(v)}<div class="w">${c}</div></div>`).join('');
@@ -98,6 +109,8 @@
       <circle cx="0" cy="2" r="10" fill="#bbb" stroke="#222" stroke-width="1.5"/>
       <circle cx="-4" cy="0" r="1.6" fill="#111"/><circle cx="4" cy="0" r="1.6" fill="#111"/><circle cx="0" cy="5" r="2" fill="#555"/>
       <path d="M15 12 q12 4 8 -8" fill="none" stroke="#222" stroke-width="1.5"/></svg>`;
+  // Myška na str. 1 jen obrysem – dítě si ji před vystřižením vybarví
+  document.getElementById('cutMouse').innerHTML = mouse.replace('width="130" ', '').replace(/fill="#bbb"|fill="#ddd"/g, 'fill="#fff"');
   document.getElementById('mice').innerHTML = mouse.repeat(4).split('</svg>').filter(Boolean).map((s) => `<div>${s}</svg></div>`).join('');
 </script>
 </body>
