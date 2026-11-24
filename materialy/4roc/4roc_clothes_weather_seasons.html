@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clothes, weather, seasons</title>
+<!--
+  Metodická poznámka (pro učitele)
+  4. ročník (12 dětí) · Explore Together 2 · Unit 2 Clothes, hodiny 1–5 (uč. s. 18–22, PS s. 14–18, metodika PDF s. 39–46).
+  Offline, myš i dotyk. Dva režimy:
+    👥 Class – tabule: 12 kol = každé dítě jednou, dalšího hráče pustí až tlačítko „Next player“.
+    💻 Solo – počítače: každý sám, po správné odpovědi pokračuje hra sama.
+  Jedno cvičení cca 6–8 min u tabule, 4–5 min na PC. ⭐ jen za správnou odpověď napoprvé.
+    1 Clothes – poslech → obrázek / ★★ napsat slovo
+    2 Weather – What's the weather like? / ★★ napsat It's …
+    3 Seasons – podle nápovědy poznat roční období / ★★ napsat ho
+    4 What's he / she wearing? – vybrat větu / ★★ složit větu ze slov (pozor: He's × She's, a scarf × jeans)
+    5 What do you wear? – podle počasí zabalit 3 správné věci / ★★ jen slova bez obrázků; pak věta I'm wearing …
+  Kázeň: pořadí hráčů určit předem, třída ukazuje palec nahoru / dolů, nahlas se nenapovídá.
+  Zdatní: ★★ + vlastní věta navíc (It's winter. I'm wearing …). Podpora: ★, 💡 Help, zdvojený poslech 🔊.
+  Vlastní kresby, žádné obrázky z učebnice ani texty písní.
+-->
+<style>
+  :root { --bg: #eef6fb; --ink: #14303f; --card: #fff; --line: #bcd6e4; --accent: #0b7285; --ok: #2b8a3e; --okbg: #d3f9d8; --bad: #c92a2a; --badbg: #ffe3e3; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.3 "Segoe UI", Arial, sans-serif; display: flex; flex-direction: column; }
+  button, input { font: inherit; color: inherit; }
+  header, nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 14px; }
+  header h1 { font-size: clamp(18px, min(2.2vw, 4vh), 26px); margin: 0 auto 0 0; }
+  .btn, .tab { border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 4px 13px; font-weight: 700; cursor: pointer; min-height: 44px; }
+  .btn.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .tab.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .player { background: #ffe066; border-radius: 12px; padding: 6px 12px; font-weight: 800; white-space: nowrap; }
+  .stars { font-weight: 800; white-space: nowrap; font-size: 22px; }
+  main { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: clamp(8px, 1.8vh, 16px); padding: 4px 14px 12px; }
+  .task { font-size: clamp(20px, min(3.2vw, 5.2vh), 42px); font-weight: 800; text-align: center; }
+  .pics { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(8px, 1.2vw, 16px); }
+  .pic { width: clamp(96px, min(15vw, 25vh), 200px); background: var(--card); border: 4px solid var(--line); border-radius: 18px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: 800; }
+  .pic .art { width: 100%; height: clamp(64px, min(11vw, 17vh), 150px); display: flex; align-items: center; justify-content: center; font-size: clamp(48px, min(8vw, 13vh), 110px); line-height: 1; }
+  .art svg { width: 100%; height: 100%; }
+  .pic.words { width: auto; min-width: 140px; padding: 14px 24px; font-size: clamp(20px, min(2.6vw, 4.4vh), 34px); }
+  .big { width: clamp(150px, min(26vw, 34vh), 300px); height: clamp(130px, min(24vw, 32vh), 280px); background: var(--card); border: 3px solid var(--line); border-radius: 22px; padding: 12px; }
+  .big .art { width: 100%; height: 100%; font-size: clamp(80px, min(14vw, 22vh), 190px); }
+  .person { height: clamp(190px, 42vh, 420px); background: var(--card); border: 3px solid var(--line); border-radius: 22px; padding: 6px 26px; }
+  .person svg { height: 100%; width: auto; display: block; }
+  .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .choice { font-size: clamp(18px, min(2.4vw, 4.2vh), 32px); font-weight: 800; border: 3px solid var(--line); background: var(--card); border-radius: 14px; padding: 8px 20px; min-height: 52px; cursor: pointer; }
+  .ok { background: var(--okbg) !important; border-color: var(--ok) !important; }
+  .no { background: var(--badbg) !important; border-color: var(--bad) !important; }
+  .go { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .used { visibility: hidden; }
+  .build { min-height: 1.7em; min-width: min(640px, 90vw); border-bottom: 4px dashed var(--line); text-align: center; font-weight: 800; font-size: clamp(20px, min(3vw, 5vh), 38px); }
+  form { display: flex; gap: 10px; width: min(720px, 100%); }
+  form input { flex: 1; min-width: 0; font-size: clamp(20px, min(2.8vw, 4.8vh), 34px); border: 3px solid var(--line); border-radius: 14px; padding: 8px 14px; background: var(--card); }
+  .msg { font-size: clamp(18px, min(2.4vw, 4vh), 30px); font-weight: 800; min-height: 1.3em; text-align: center; }
+  .msg.good { color: var(--ok); } .msg.bad { color: var(--bad); }
+  .hint { display: none; background: #fff3bf; color: #4a3800; border-radius: 12px; padding: 8px 14px; font-size: clamp(14px, min(1.6vw, 2.8vh), 19px); text-align: center; max-width: 1150px; }
+  .hint.show { display: block; }
+  .locked > :not(.nextrow) { pointer-events: none; }
+  .end { text-align: center; font-size: clamp(24px, min(3.6vw, 6vh), 46px); font-weight: 800; }
+  @media (max-width: 700px) { body { height: auto; min-height: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧣 Clothes, weather, seasons</h1>
+  <button class="btn on" data-mode="class">👥 Class</button><button class="btn" data-mode="solo">💻 Solo</button>
+  <button class="btn on" data-level="1">★ Level 1</button><button class="btn" data-level="2">★★ Level 2</button>
+  <button class="btn" id="hintBtn">💡 Help</button><button class="btn" id="voiceBtn" aria-label="Voice on or off">🔊</button>
+  <span class="player" id="player"></span><span class="stars" id="stars"></span>
+</header>
+<nav>
+  <button class="tab" data-ex="clothes">1 · Clothes</button>
+  <button class="tab" data-ex="weather">2 · Weather</button>
+  <button class="tab" data-ex="seasons">3 · Seasons</button>
+  <button class="tab" data-ex="wearing">4 · What's he / she wearing?</button>
+  <button class="tab" data-ex="pack">5 · What do you wear?</button>
+</nav>
+<main id="main"></main>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const cap = (s) => s[0].toUpperCase() + s.slice(1);
+  const ROUNDS = 12;
+
+  // ---------- Oblečení: kresba v souřadnicích postavy (200 × 320), vb = výřez pro obrázek ----------
+  const K = 'stroke="#22313a" stroke-width="3" stroke-linejoin="round"';
+  const SLEEVES = 'L172 178 L154 186 L130 140';
+  const C = {
+    sunglasses: { vb: '58 40 84 38', art: `<path d="M66 54 H134" stroke="#22313a" stroke-width="5"/><rect x="70" y="50" width="26" height="20" rx="8" fill="#22313a"/><rect x="104" y="50" width="26" height="20" rx="8" fill="#22313a"/>` },
+    sandals: { vb: '62 270 76 42', art: [74, 104].map((x) => `<path d="M${x} 300 h24 q4 8 -4 8 h-20 q-6 0 0 -8Z" fill="#8a4b1f" ${K}/><path d="M${x + 2} 300 L${x + 11} 286 L${x + 22} 300 M${x + 4} 284 h16" fill="none" stroke="#c2410c" stroke-width="5"/>`).join('') },
+    swimsuit: { vb: '66 88 68 124', art: `<path d="M76 96 L86 96 Q100 132 114 96 L124 96 L122 138 L128 190 L106 206 L94 206 L72 190 L78 138Z" fill="#f06595" ${K}/><path d="M77 150 H123" stroke="#fff" stroke-width="5"/>` },
+    jeans: { vb: '62 172 76 124', art: `<path d="M71 180 H129 L127 288 H103 L100 206 L97 288 H73Z" fill="#3b6fb6" ${K}/><path d="M71 190 H129 M100 190 V206" stroke="#234b82" stroke-width="3"/><path d="M78 196 h12 v10 h-12Z M110 196 h12 v10 h-12Z" fill="none" stroke="#f1c40f" stroke-width="2"/>` },
+    scarf: { vb: '62 82 76 92', art: `<rect x="70" y="90" width="60" height="18" rx="9" fill="#2f9e44" ${K}/><path d="M108 104 h20 v56 h-20Z" fill="#2f9e44" ${K}/><path d="M108 120 h20 M108 136 h20" stroke="#b2f2bb" stroke-width="5"/><path d="M110 160 v8 M116 160 v8 M122 160 v8 M127 160 v8" stroke="#22313a" stroke-width="3"/>` },
+    raincoat: { vb: '20 84 160 156', art: `<path d="M66 96 H134 ${SLEEVES} L138 232 H62 L70 140 L46 186 L28 178Z" fill="#fcc419" ${K}/><path d="M74 96 Q100 122 126 96" fill="#fab005" ${K}/><path d="M100 110 V232" stroke="#22313a" stroke-width="3"/><circle cx="92" cy="136" r="4" fill="#22313a"/><circle cx="92" cy="164" r="4" fill="#22313a"/><circle cx="92" cy="192" r="4" fill="#22313a"/><path d="M70 200 h16 M114 200 h16" stroke="#22313a" stroke-width="3"/>` },
+    'woolly hat': { vb: '52 -16 96 72', art: `<g transform="translate(0 -10)"><path d="M64 50 Q66 6 100 6 Q134 6 136 50Z" fill="#e8590c" ${K}/><path d="M78 22 Q74 34 74 46 M100 10 V46 M122 22 Q126 34 126 46" stroke="#ffc078" stroke-width="5" fill="none"/><rect x="58" y="42" width="84" height="15" rx="7" fill="#fff4e6" ${K}/><circle cx="100" cy="5" r="9" fill="#fff4e6" ${K}/></g>` },
+    gloves: { icon: `<g ${K} fill="#e03131"><path d="M14 92 V52 Q2 46 8 36 Q14 30 20 42 V20 Q20 12 27 12 Q33 12 34 20 Q36 8 43 10 Q48 12 48 22 Q56 18 57 28 V92Z"/><path d="M126 92 V52 Q138 46 132 36 Q126 30 120 42 V20 Q120 12 113 12 Q107 12 106 20 Q104 8 97 10 Q92 12 92 22 Q84 18 83 28 V92Z"/></g><path d="M14 82 H57 M83 82 H126" stroke="#fff" stroke-width="6"/>`, vb: '0 0 140 100', art: `<circle cx="36" cy="188" r="13" fill="#e03131" ${K}/><circle cx="164" cy="188" r="13" fill="#e03131" ${K}/><path d="M28 176 L48 182 M172 176 L152 182" stroke="#fff" stroke-width="6"/>` },
+    boots: { vb: '60 244 80 66', art: [[72, 98, 64], [102, 128, 94]].map(([a, b, t], i) => `<path d="${i ? `M102 252 H126 V294 Q136 296 136 306 H102Z` : `M98 252 H74 V294 Q64 296 64 306 H98Z`}" fill="#5f3dc4" ${K}/>`).join('') },
+    coat: { vb: '20 84 160 156', art: `<path d="M66 96 H134 ${SLEEVES} L138 232 H62 L70 140 L46 186 L28 178Z" fill="#a61e4d" ${K}/><path d="M80 96 L100 128 L120 96" fill="#fff0f6" ${K}/><path d="M100 128 V232" stroke="#22313a" stroke-width="3"/><path d="M62 170 H138" stroke="#4a0d25" stroke-width="8"/>` },
+    shorts: { vb: '62 172 76 66', art: `<path d="M71 180 H129 L131 228 H104 L100 208 L96 228 H69Z" fill="#1098ad" ${K}/>` },
+    'T-shirt': { vb: '36 88 128 106', art: `<path d="M66 96 H134 L156 132 L140 142 L130 126 V186 H70 V126 L60 142 L44 132Z" fill="#94d82d" ${K}/>` },
+    umbrella: { vb: '0 0 120 120', icon: `<path d="M10 62 Q16 12 60 12 Q104 12 110 62 Q98 50 86 62 Q73 50 60 62 Q47 50 34 62 Q22 50 10 62Z" fill="#1c7ed6" ${K}/><path d="M60 6 V96 Q60 110 72 110 Q82 110 82 98" fill="none" stroke="#22313a" stroke-width="5"/>` },
+  };
+  const art = (k) => `<svg viewBox="${C[k].vb}" aria-hidden="true">${C[k].icon || C[k].art}</svg>`;
+  const ARTICLE = new Set(['scarf', 'raincoat', 'woolly hat', 'swimsuit', 'coat', 'T-shirt', 'jumper']);
+  const withA = (k) => (k === 'umbrella' ? 'an umbrella' : ARTICLE.has(k) ? `a ${k}` : k);
+  const NEW = ['sunglasses', 'sandals', 'swimsuit', 'jeans', 'scarf', 'raincoat', 'woolly hat', 'gloves'];
+  const REVIEW = ['boots', 'coat', 'shorts', 'T-shirt'];
+  const ORDER = ['shorts', 'jeans', 'sandals', 'boots', 'T-shirt', 'swimsuit', 'raincoat', 'coat', 'scarf', 'gloves'];
+  function person(who, clothes) {
+    const swim = clothes.includes('swimsuit');
+    const on = new Set(clothes);
+    if (!swim) { if (!on.has('jeans')) on.add('shorts'); if (!on.has('raincoat') && !on.has('coat')) on.add('T-shirt'); }
+    const skin = '#f3c9a5', hair = who === 'she' ? '#8a4b1f' : '#4a3222';
+    const body = `<path d="M70 100 H130 L170 184 M70 100 L30 184" fill="none" stroke="${skin}" stroke-width="18" stroke-linecap="round"/><rect x="72" y="96" width="56" height="96" rx="12" fill="${skin}"/><rect x="76" y="180" width="20" height="122" rx="8" fill="${skin}"/><rect x="104" y="180" width="20" height="122" rx="8" fill="${skin}"/><circle cx="32" cy="188" r="10" fill="${skin}"/><circle cx="168" cy="188" r="10" fill="${skin}"/><rect x="90" y="86" width="20" height="16" fill="${skin}"/>`;
+    const back = who === 'she' ? `<path d="M62 58 Q62 22 100 22 Q138 22 138 58 L146 124 Q132 132 124 110 H76 Q68 132 54 124Z" fill="${hair}"/>` : '';
+    const head = `<circle cx="100" cy="60" r="33" fill="${skin}"/><circle cx="88" cy="60" r="4" fill="#22313a"/><circle cx="112" cy="60" r="4" fill="#22313a"/><path d="M88 76 Q100 86 112 76" fill="none" stroke="#22313a" stroke-width="3"/>`;
+    const front = who === 'she' ? `<path d="M66 60 Q66 24 100 24 Q134 24 134 60 Q122 38 100 38 Q78 38 66 60Z" fill="${hair}"/>` : `<path d="M67 54 Q68 22 100 22 Q132 22 133 54 Q120 36 100 40 Q80 36 67 54Z" fill="${hair}"/>`;
+    const late = ['sunglasses', 'woolly hat'].filter((k) => on.has(k)).map((k) => C[k].art).join('');
+    return `<svg viewBox="10 -18 180 332" role="img" aria-label="${who === 'she' ? 'a girl' : 'a boy'}">${back}${body}${ORDER.filter((k) => on.has(k) && k !== 'scarf').map((k) => C[k].art).join('')}${head}${front}${on.has('scarf') ? C.scarf.art : ''}${late}</svg>`;
+  }
+
+  const WEATHER = { sunny: '☀️', rainy: '🌧️', snowy: '❄️', windy: '🌬️', cloudy: '☁️', hot: '🥵', cold: '🥶' };
+  const CLASH = { sunny: ['hot'], hot: ['sunny'], snowy: ['cold'], cold: ['snowy'], rainy: ['cloudy'], cloudy: ['rainy'] };
+  const SEASONS = { spring: '🌷', summer: '🏖️', autumn: '🍂', winter: '⛄' };
+  const CLUES = {
+    spring: ['It\'s warm and rainy. I can see new flowers.', 'It\'s April or May.', 'It\'s Easter time!'],
+    summer: ['It\'s hot and sunny. I\'m wearing a swimsuit.', 'It\'s July or August.', 'There\'s no school. I\'m on holiday.'],
+    autumn: ['It\'s windy. The leaves are red and brown.', 'It\'s October or November.', 'It\'s Halloween time!'],
+    winter: ['It\'s cold and snowy. I\'m wearing gloves.', 'It\'s January or February.', 'It\'s Christmas time!'],
+  };
+  const PAIRS = [['woolly hat', 'gloves'], ['scarf', 'jeans'], ['swimsuit', 'sunglasses'], ['raincoat', 'boots'], ['sunglasses', 'sandals'], ['scarf', 'gloves'], ['jeans', 'sandals'], ['raincoat', 'jeans'], ['woolly hat', 'scarf'], ['sunglasses', 'jeans'], ['gloves', 'boots'], ['swimsuit', 'sandals']];
+  const PACK = [
+    { e: '❄️', s: 'It\'s winter. It\'s cold and snowy.', yes: ['woolly hat', 'scarf', 'gloves'], no: ['swimsuit', 'sandals', 'shorts'] },
+    { e: '☀️', s: 'It\'s summer. It\'s hot and sunny.', yes: ['sunglasses', 'sandals', 'swimsuit'], no: ['scarf', 'gloves', 'woolly hat'] },
+    { e: '🌧️', s: 'It\'s spring. It\'s rainy.', yes: ['raincoat', 'boots', 'umbrella'], no: ['swimsuit', 'sunglasses', 'sandals'] },
+    { e: '🍂', s: 'It\'s autumn. It\'s cold and windy.', yes: ['coat', 'scarf', 'jeans'], no: ['swimsuit', 'sandals', 'shorts'] },
+    { e: '🏖️', s: 'You\'re at the beach. It\'s very hot.', yes: ['swimsuit', 'sunglasses', 'shorts'], no: ['coat', 'gloves', 'scarf'] },
+    { e: '⛄', s: 'You\'re in the snow.', yes: ['coat', 'gloves', 'boots'], no: ['sandals', 'swimsuit', 'shorts'] },
+  ];
+
+  // ---------- Hlas ----------
+  let voiceOn = true, voice = null;
+  const synth = window.speechSynthesis;
+  const pickVoice = () => { const v = synth.getVoices(); voice = v.find((x) => x.lang === 'en-GB') || v.find((x) => x.lang.startsWith('en')) || null; };
+  if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; }
+  function speak(t) {
+    if (!voiceOn || !synth) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(t); if (voice) u.voice = voice; u.lang = 'en-GB'; u.rate = .85; synth.speak(u);
+  }
+
+  // ---------- Stav ----------
+  let mode = 'class', level = 1, ex = 'clothes', round = 0, stars = 0, first = true, tasks = [], timer = 0;
+  // Úlohy: pool se míchá dokola, stejná nikdy dvakrát po sobě.
+  function deck(pool, n) {
+    const out = [];
+    while (out.length < n) {
+      let part = shuffle(pool);
+      if (out.length && part[0] === out[out.length - 1]) part = [...part.slice(1), part[0]];
+      out.push(...part);
+    }
+    return out.slice(0, n);
+  }
+  function bar() {
+    $('#stars').textContent = `⭐ ${stars} / ${ROUNDS}`;
+    $('#player').textContent = mode === 'class' ? `👤 Player ${Math.min(round + 1, ROUNDS)} / ${ROUNDS}` : `${Math.min(round + 1, ROUNDS)} / ${ROUNDS}`;
+    $$('[data-ex]').forEach((b) => b.classList.toggle('on', b.dataset.ex === ex));
+    $$('[data-level]').forEach((b) => b.classList.toggle('on', +b.dataset.level === level));
+    $$('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
+  }
+  const HINT = `<div class="hint" id="hint"><b>Clothes:</b> ${[...NEW, ...REVIEW].map(withA).join(' · ')}<br><b>Weather:</b> It's ${Object.entries(WEATHER).map(([w, e]) => `${e} ${w}`).join(' · ')}<br><b>Seasons:</b> ${Object.entries(SEASONS).map(([w, e]) => `${e} ${w}`).join(' · ')}<br>👦 <b>He's</b> wearing … &nbsp; 👧 <b>She's</b> wearing …</div>`;
+  const screen = (html, text) => { $('#main').innerHTML = `${html}<div class="msg" id="msg">${text}</div>${HINT}`; };
+  function msg(t, c) { $('#msg').textContent = t; $('#msg').className = `msg ${c}`; }
+  function wrong(el, t) { first = false; if (el) { el.classList.add('no'); setTimeout(() => el.classList.remove('no'), 700); } msg(t, 'bad'); }
+  function right(t, then = '') {
+    if (first) stars++;
+    bar();
+    msg(`${first ? '⭐' : '✓'} ${t} ${then}`, 'good');
+    speak(t);
+    $('#main').classList.add('locked');
+    const go = () => { clearTimeout(timer); round++; next(); };
+    if (mode === 'solo') { timer = setTimeout(go, 2000); return; }
+    $('#main').insertAdjacentHTML('beforeend', `<div class="choices nextrow"><button class="choice go" id="nextP">${round + 1 >= ROUNDS ? 'Finish 🎉' : 'Next player ▶'}</button></div>`);
+    $('#nextP').onclick = go;
+  }
+  const norm = (s) => s.toLowerCase().replace(/[’`´]/g, "'").replace(/[.!?]/g, '').replace(/\s+/g, ' ').trim();
+  const FORM = (ph) => `<form id="f"><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${ph}" aria-label="${ph}"><button class="btn on">Check ✓</button></form>`;
+  function typed(check, word, done) {
+    let n = 0;
+    $('#in').focus();
+    $('#f').onsubmit = (e) => {
+      e.preventDefault();
+      if (!norm($('#in').value)) return;
+      if (check(norm($('#in').value))) { $('#in').classList.add('ok'); return done(); }
+      n++;
+      wrong($('#in'), `Not yet. It starts with: ${word.slice(0, Math.min(n + 1, word.length - 1))}…`);
+    };
+  }
+  const hear = '<button class="btn" id="hear" aria-label="Listen again">🔊</button>';
+
+  // ---------- 1 Clothes ----------
+  function rClothes(k) {
+    if (level === 1) {
+      const opts = shuffle([k, ...shuffle([...NEW, ...REVIEW].filter((x) => x !== k)).slice(0, 4)]);
+      screen(`<div class="task">Listen and click! ${hear}</div><div class="pics" id="p">${opts.map((o) => `<button class="pic" data-k="${o}" aria-label="picture"><span class="art">${art(o)}</span></button>`).join('')}</div>`, 'Which picture is it?');
+      speak(k); $('#hear').onclick = () => speak(k);
+      $('#p').onclick = (e) => {
+        const b = e.target.closest('.pic'); if (!b) return;
+        if (b.dataset.k !== k) return wrong(b, `No – this is ${withA(b.dataset.k)}.`);
+        b.classList.add('ok'); right(`I'm wearing ${withA(k)}.`);
+      };
+    } else {
+      screen(`<div class="task">What is it? Write the word.</div><div class="big"><div class="art">${art(k)}</div></div>${FORM('Write the word')}`, 'Look and write.');
+      typed((v) => v.replace(/^(a|an) /, '') === k.toLowerCase(), k, () => right(`I'm wearing ${withA(k)}.`));
+    }
+  }
+  // ---------- 2 Weather ----------
+  function rWeather(w) {
+    const pict = `<div class="task">What's the weather like?</div><div class="big"><div class="art">${WEATHER[w]}</div></div>`;
+    if (level === 1) {
+      const opts = shuffle([w, ...shuffle(Object.keys(WEATHER).filter((x) => x !== w && !(CLASH[w] || []).includes(x))).slice(0, 2)]);
+      screen(`${pict}<div class="choices" id="c">${opts.map((o) => `<button class="choice" data-k="${o}">It's ${o}.</button>`).join('')}</div>`, 'Choose the sentence!');
+      $('#c').onclick = (e) => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        if (b.dataset.k !== w) return wrong(b, 'Look at the picture again!');
+        b.classList.add('ok'); right(`It's ${w}.`);
+      };
+    } else {
+      screen(`${pict}${FORM("It's …")}`, "Write the sentence: It's …");
+      typed((v) => [`it's ${w}`, `it is ${w}`].includes(v), w, () => right(`It's ${w}.`));
+    }
+    speak("What's the weather like?");
+  }
+  // ---------- 3 Seasons ----------
+  function rSeasons({ s, clue }) {
+    const top = `<div class="task">${clue} ${hear}</div>`;
+    if (level === 1) {
+      screen(`${top}<div class="pics" id="p">${shuffle(Object.keys(SEASONS)).map((k) => `<button class="pic" data-k="${k}"><span class="art">${SEASONS[k]}</span>${k}</button>`).join('')}</div>`, 'Which season is it?');
+      $('#p').onclick = (e) => {
+        const b = e.target.closest('.pic'); if (!b) return;
+        if (b.dataset.k !== s) return wrong(b, `Is it ${b.dataset.k}? No, it isn't.`);
+        b.classList.add('ok'); right(`It's ${s}!`);
+      };
+    } else {
+      screen(`${top}${FORM('Which season is it?')}`, 'Write the season.');
+      typed((v) => v.replace(/^(it's|it is) /, '') === s, s, () => right(`It's ${s}!`));
+    }
+    speak(clue); $('#hear').onclick = () => speak(clue);
+  }
+  // ---------- 4 What's he / she wearing? ----------
+  const sent = (who, pair) => `${who === 'he' ? "He's" : "She's"} wearing ${withA(pair[0])} and ${withA(pair[1])}.`;
+  function rWearing({ who, pair }) {
+    const good = sent(who, pair), other = who === 'he' ? 'she' : 'he';
+    const fig = `<div class="task">What's ${who} wearing?</div><div class="person">${person(who, pair)}</div>`;
+    if (level === 1) {
+      const bad = pick(NEW.filter((k) => !pair.includes(k) && !(pair.includes('swimsuit') && k === 'raincoat')));
+      const opts = shuffle([good, sent(other, pair), sent(who, [pair[0], bad])]);
+      screen(`${fig}<div class="choices" id="c">${opts.map((o, i) => `<button class="choice" data-i="${i}">${o}</button>`).join('')}</div>`, 'Look and choose the sentence!');
+      $('#c').onclick = (e) => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        const o = opts[b.dataset.i];
+        if (o !== good) return wrong(b, o === sent(other, pair) ? 'Boy → He’s … Girl → She’s …' : 'Look at the clothes again!');
+        b.classList.add('ok'); right(good);
+      };
+    } else {
+      const words = good.replace('.', '').replace('woolly hat', 'woolly_hat').split(' ');
+      const tiles = shuffle([...words, who === 'he' ? "She's" : "He's", ...(words.filter((w) => w === 'a').length < 2 ? ['a'] : [])]);
+      let pos = 0;
+      screen(`${fig}<div class="build" id="b">&nbsp;</div><div class="choices" id="c">${tiles.map((w) => `<button class="choice" data-w="${w}">${w.replace('_', ' ')}</button>`).join('')}</div>`, 'Make the sentence! (Be careful – extra words!)');
+      $('#c').onclick = (e) => {
+        const b = e.target.closest('.choice'); if (!b) return;
+        const w = b.dataset.w;
+        if (w !== words[pos]) return wrong(b, pos === 0 ? 'Boy → He’s … Girl → She’s …' : w === 'a' ? `No “a” here – ${words[pos].replace('_', ' ')} …` : words[pos] === 'a' ? 'One thing – you need “a”!' : 'Not this word yet!');
+        b.classList.add('used'); pos++;
+        $('#b').textContent = words.slice(0, pos).join(' ').replace('_', ' ');
+        if (pos === words.length) { $('#b').textContent += '.'; right(good); }
+      };
+    }
+    speak(`What's ${who} wearing?`);
+  }
+  // ---------- 5 What do you wear? ----------
+  function rPack(t) {
+    const left = new Set(t.yes);
+    screen(`<div class="task">${t.e} ${t.s} ${hear}</div><div class="pics" id="p">${shuffle([...t.yes, ...t.no]).map((k) => (level === 1 ? `<button class="pic" data-k="${k}"><span class="art">${art(k)}</span>${k}</button>` : `<button class="pic words" data-k="${k}">${k}</button>`)).join('')}</div>`, 'Choose 3 things for this weather!');
+    speak(t.s); $('#hear').onclick = () => speak(t.s);
+    $('#p').onclick = (e) => {
+      const b = e.target.closest('.pic'); if (!b || b.classList.contains('ok')) return;
+      if (!left.has(b.dataset.k)) return wrong(b, `${cap(b.dataset.k)}? Not for this weather!`);
+      b.classList.add('ok'); left.delete(b.dataset.k);
+      if (left.size) { msg(`Good! ${left.size} more …`, 'good'); return; }
+      const [x, y, z] = t.yes.map(withA);
+      right(t.yes.includes('umbrella') ? `I'm wearing ${x} and ${y}. I've got ${z}.` : `I'm wearing ${x}, ${y} and ${z}.`, 'Read it aloud!');
+    };
+  }
+
+  const EX = {
+    clothes: { make: () => shuffle([...NEW, ...REVIEW]), draw: rClothes },
+    weather: { make: () => deck(Object.keys(WEATHER), ROUNDS), draw: rWeather },
+    seasons: { make: () => { const o = { spring: shuffle(CLUES.spring), summer: shuffle(CLUES.summer), autumn: shuffle(CLUES.autumn), winter: shuffle(CLUES.winter) }; return deck(Object.keys(SEASONS), ROUNDS).map((s) => ({ s, clue: o[s].pop() })); }, draw: rSeasons },
+    wearing: { make: () => { const ps = shuffle(PAIRS); const rest = ps.filter((p) => !p.includes('swimsuit')); return ps.map((pair) => ({ who: pair.includes('swimsuit') ? 'she' : rest.indexOf(pair) < 6 ? 'he' : 'she', pair })); }, draw: rWearing },
+    pack: { make: () => deck(PACK, ROUNDS), draw: rPack },
+  };
+  function next() {
+    clearTimeout(timer);
+    $('#main').classList.remove('locked');
+    bar();
+    if (round >= ROUNDS) return finish();
+    first = true;
+    EX[ex].draw(tasks[round]);
+  }
+  function finish() {
+    const keys = Object.keys(EX), nx = keys[keys.indexOf(ex) + 1];
+    $('#main').innerHTML = `<div class="end">🎉 ${mode === 'class' ? 'Well done, everybody!' : 'Well done!'}<br>⭐ ${stars} / ${ROUNDS}${mode === 'solo' ? '<br><span style="font-size:.6em">Put your hand up and show your teacher.</span>' : ''}</div><div class="choices"><button class="choice" id="again">🔁 Play again</button>${nx ? '<button class="choice go" id="nx">Next exercise ▶</button>' : ''}</div>`;
+    speak('Well done!');
+    $('#again').onclick = () => start(ex);
+    if (nx) $('#nx').onclick = () => start(nx);
+  }
+  function start(e) { ex = e; round = 0; stars = 0; tasks = EX[e].make(); next(); }
+  // Úroveň jde přepnout i pro jednoho hráče; po správné odpovědi platí až pro dalšího.
+  $$('[data-level]').forEach((b) => (b.onclick = () => { level = +b.dataset.level; bar(); if (round < ROUNDS && !$('#main').classList.contains('locked')) { const f = first; next(); first = f; } }));
+  $$('[data-mode]').forEach((b) => (b.onclick = () => { mode = b.dataset.mode; start(ex); }));
+  $$('[data-ex]').forEach((b) => (b.onclick = () => start(b.dataset.ex)));
+  $('#hintBtn').onclick = () => $('#hint')?.classList.toggle('show');
+  $('#voiceBtn').onclick = () => { voiceOn = !voiceOn; $('#voiceBtn').textContent = voiceOn ? '🔊' : '🔇'; if (!voiceOn && synth) synth.cancel(); };
+  window.__cws = { start, get state() { return { ex, level, round, stars, tasks, mode }; }, sent, PACK };
+  start('clothes');
+})();
+</script>
+</body>
+</html>
